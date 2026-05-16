@@ -1,10 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>English Words - Learn Vocabulary</title>
-    <style>
         * {
             margin: 0;
             padding: 0;
@@ -131,59 +124,3 @@
             padding: 40px;
             color: #666;
         }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>📚 English Words App</h1>
-            <p>Master English vocabulary with flashcards</p>
-            <div class="nav-links">
-                <a href="/cards">All Cards</a>
-                <a href="/cards/new">Add New Card</a>
-                <a href="/cards/random">Random Card</a>
-            </div>
-        </header>
-
-        <div class="content">
-            <if test="${successMessage != null}">
-                <div class="success-message">${successMessage}</div>
-            </if>
-
-            <h2>Word Cards</h2>
-
-            <form class="search-form" action="/cards/search" method="GET">
-                <input type="text" name="query" placeholder="Search for words..." value="${query ?? ''}">
-                <button type="submit" class="btn">Search</button>
-            </form>
-
-            <if test="${cards.isEmpty()}">
-                <div class="empty-state">
-                    <p>No word cards found.</p>
-                    <p><a href="/cards/new" class="btn">Create your first card!</a></p>
-                </div>
-            </if>
-
-            <div class="cards-grid">
-                <for items="${cards}" var="card">
-                    <div class="card-item">
-                        <h3>${card.englishWord}</h3>
-                        <p><strong>Translation:</strong> ${card.translation}</p>
-                        <if test="${card.example != null && !card.example.isEmpty()}">
-                            <p><em>Example:</em> ${card.example}</p>
-                        </if>
-                        <span class="difficulty-badge difficulty-${card.difficultyLevel}">${card.difficultyLevel}</span>
-                        <div class="card-actions">
-                            <a href="/cards/${card.id}" class="btn">View</a>
-                            <a href="/cards/${card.id}/edit" class="btn">Edit</a>
-                            <form action="/cards/${card.id}/delete" method="POST" style="display:inline;">
-                                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
-                            </form>
-                        </div>
-                    </div>
-                </for>
-            </div>
-        </div>
-    </div>
-</body>
-</html>

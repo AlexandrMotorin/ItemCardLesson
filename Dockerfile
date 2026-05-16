@@ -8,7 +8,7 @@ COPY build.gradle build.gradle
 COPY settings.gradle settings.gradle
 COPY src src
 
-RUN chmod +x gradlew
+RUN chmod -R ugo+x gradlew
 RUN ./gradlew bootJar --no-daemon
 
 EXPOSE 8080

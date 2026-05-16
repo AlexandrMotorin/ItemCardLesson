@@ -20,21 +20,24 @@ public class WordCardController {
     @GetMapping
     public String listCards(Model model) {
         model.addAttribute("cards", wordCardService.getAllCards());
-        return "cards-list.jte";
+        return "index";
     }
 
     @GetMapping("/new")
     public String showNewCardForm(Model model) {
-        model.addAttribute("wordCard", new WordCard());
-        return "card-form.jte";
+        WordCard wordCard = new WordCard();
+        model.addAttribute("wordCard", wordCard);
+        return "fragments/card-form";
     }
 
     @PostMapping
-    public String createCard(@Valid @ModelAttribute WordCard wordCard, 
-                             BindingResult bindingResult, 
+    public String createCard(@Valid @ModelAttribute("wordCard") WordCard wordCard,
+                             BindingResult bindingResult,
+                             Model model,
                              RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            return "card-form.jte";
+            model.addAttribute("errors", bindingResult);
+            return "fragments/card-form";
         }
         wordCardService.createCard(wordCard);
         redirectAttributes.addFlashAttribute("successMessage", "Card created successfully!");
@@ -46,7 +49,7 @@ public class WordCardController {
         return wordCardService.getCardById(id)
                 .map(card -> {
                     model.addAttribute("card", card);
-                    return "card-detail.jte";
+                    return "fragments/card-detail";
                 })
                 .orElse("redirect:/cards");
     }
@@ -56,18 +59,20 @@ public class WordCardController {
         return wordCardService.getCardById(id)
                 .map(card -> {
                     model.addAttribute("wordCard", card);
-                    return "card-form.jte";
+                    return "fragments/card-form";
                 })
                 .orElse("redirect:/cards");
     }
 
     @PostMapping("/{id}")
-    public String updateCard(@PathVariable Long id, 
-                             @Valid @ModelAttribute WordCard wordCard, 
+    public String updateCard(@PathVariable Long id,
+                             @Valid @ModelAttribute("wordCard") WordCard wordCard,
                              BindingResult bindingResult,
+                             Model model,
                              RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            return "card-form.jte";
+            model.addAttribute("errors", bindingResult);
+            return "fragments/card-form";
         }
         wordCardService.updateCard(id, wordCard);
         redirectAttributes.addFlashAttribute("successMessage", "Card updated successfully!");
@@ -88,13 +93,13 @@ public class WordCardController {
             return "redirect:/cards/new";
         }
         model.addAttribute("card", card);
-        return "card-detail.jte";
+        return "fragments/card-detail";
     }
 
     @GetMapping("/search")
     public String searchCards(@RequestParam String query, Model model) {
         model.addAttribute("cards", wordCardService.searchCards(query));
         model.addAttribute("query", query);
-        return "cards-list.jte";
+        return "fragments/cards-list";
     }
 }

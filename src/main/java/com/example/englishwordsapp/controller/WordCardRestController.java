@@ -2,6 +2,7 @@ package com.example.englishwordsapp.controller;
 
 import com.example.englishwordsapp.model.WordCard;
 import com.example.englishwordsapp.service.WordCardService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +12,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/cards")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class WordCardRestController {
 
     private final WordCardService wordCardService;
@@ -29,12 +29,12 @@ public class WordCardRestController {
     }
 
     @PostMapping
-    public WordCard createCard(@RequestBody WordCard wordCard) {
+    public WordCard createCard(@Valid @RequestBody WordCard wordCard) {
         return wordCardService.createCard(wordCard);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<WordCard> updateCard(@PathVariable Long id, @RequestBody WordCard wordCard) {
+    public ResponseEntity<WordCard> updateCard(@PathVariable Long id, @Valid @RequestBody WordCard wordCard) {
         try {
             return ResponseEntity.ok(wordCardService.updateCard(id, wordCard));
         } catch (RuntimeException e) {

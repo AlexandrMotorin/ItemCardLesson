@@ -39,4 +39,8 @@ public class WordCard {
         INTERMEDIATE,
         ADVANCED
     }
+
+    public boolean isSelected(DifficultyLevel lvl) {
+        return difficultyLevel != null && difficultyLevel == lvl;
+    }
 }

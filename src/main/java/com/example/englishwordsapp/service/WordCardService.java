@@ -59,11 +59,6 @@ public class WordCardService {
 
     @Transactional(readOnly = true)
     public WordCard getRandomCard() {
-        List<WordCard> allCards = wordCardRepository.findAll();
-        if (allCards.isEmpty()) {
-            return null;
-        }
-        int randomIndex = (int) (Math.random() * allCards.size());
-        return allCards.get(randomIndex);
+        return wordCardRepository.findRandomCard().orElse(null);
     }
 }
