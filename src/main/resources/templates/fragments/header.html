@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <header th:fragment="header">
     <nav class="navbar">
         <div class="container">
@@ -8,18 +9,58 @@
                 EnglishCards
             </a>
             <div class="navbar-links">
-                <a href="/cards" sec:authorize="isAuthenticated()">
-                    <span>📋</span>
-                    <span class="nav-label">My Cards</span>
-                </a>
-                <a href="/cards/new">
-                    <span>➕</span>
-                    <span class="nav-label">Add Word</span>
-                </a>
-                <a href="/cards/random" sec:authorize="isAuthenticated()">
-                    <span>🎲</span>
-                    <span class="nav-label">Random</span>
-                </a>
+                <!-- Links for authenticated users -->
+                <th:block sec:authorize="isAuthenticated()">
+                    <a href="/cards">
+                        <span>📋</span>
+                        <span class="nav-label">My Cards</span>
+                    </a>
+                    <a href="/sets">
+                        <span>📚</span>
+                        <span class="nav-label">Sets</span>
+                    </a>
+                    <a href="/cards/new">
+                        <span>➕</span>
+                        <span class="nav-label">Add Word</span>
+                    </a>
+                    <a href="/cards/random">
+                        <span>🎲</span>
+                        <span class="nav-label">Random</span>
+                    </a>
+                    <a href="/study">
+                        <span>📖</span>
+                        <span class="nav-label">Study</span>
+                    </a>
+                    <a href="/analytics">
+                        <span>📊</span>
+                        <span class="nav-label">Analytics</span>
+                    </a>
+                    <div class="nav-user-section">
+                        <span class="nav-user-info">
+                            <span class="nav-user-icon">👤</span>
+                            <span class="nav-username" sec:authentication="name">username</span>
+                        </span>
+                        <form th:action="@{/logout}" method="POST" class="logout-form">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button type="submit" class="btn btn-sm btn-ghost logout-btn">
+                                <span>🚪</span>
+                                <span>Logout</span>
+                            </button>
+                        </form>
+                    </div>
+                </th:block>
+
+                <!-- Links for unauthenticated users -->
+                <th:block sec:authorize="!isAuthenticated()">
+                    <a href="/login">
+                        <span>🔑</span>
+                        <span class="nav-label">Login</span>
+                    </a>
+                    <a href="/register">
+                        <span>📝</span>
+                        <span class="nav-label">Register</span>
+                    </a>
+                </th:block>
             </div>
         </div>
     </nav>

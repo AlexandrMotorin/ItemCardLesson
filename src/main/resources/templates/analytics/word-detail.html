@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Word Analytics - EnglishCards</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/header :: header}"></div>
+
+        <main class="container main-content">
+            <div class="page-header">
+                <h1>📊 Word Analytics</h1>
+                <p class="text-muted">
+                    <span th:text="${wordCard.englishWord}">word</span>
+                    —
+                    <span th:text="${wordCard.translation}">translation</span>
+                    in set «<span th:text="${wordSet.name}">set</span>»
+                </p>
+            </div>
+
+            <!-- Overall Stats -->
+            <div class="card mb-2">
+                <div class="card-body">
+                    <div class="results-summary">
+                        <div class="result-stat">
+                            <span class="result-stat-icon">📝</span>
+                            <span class="result-stat-label">Total Attempts</span>
+                            <span class="result-stat-value" th:text="${wordStats.totalAttempts}">0</span>
+                        </div>
+                        <div class="result-stat result-stat-correct">
+                            <span class="result-stat-icon">✅</span>
+                            <span class="result-stat-label">Correct</span>
+                            <span class="result-stat-value" th:text="${wordStats.correctAnswers}">0</span>
+                        </div>
+                        <div class="result-stat"
+                             th:classappend="${wordStats.successRate >= 80} ? 'result-stat-great' : (${wordStats.successRate >= 50} ? 'result-stat-good' : 'result-stat-poor')">
+                            < 50} 'result-stat-poor'">
+                            <span class="result-stat-icon">🎯</span>
+                            <span class="result-stat-label">Success Rate</span>
+                            <span class="result-stat-value" th:text="${#numbers.formatDecimal(wordStats.successRate, 1, 1)} + '%'">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Per Exercise Type Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Stats by Exercise Type</h2>
+                </div>
+                <div class="card-body">
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Exercise Type</th>
+                                <th>Attempts</th>
+                                <th>Correct</th>
+                                <th>Success Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>✏️ Text Input</td>
+                                <td th:text="${wordStats.textInputAttempts}">0</td>
+                                <td th:text="${wordStats.textInputCorrect}">0</td>
+                                <td>
+                                    <span th:text="${wordStats.textInputAttempts > 0 ? #numbers.formatDecimal(wordStats.textInputCorrect * 100.0 / wordStats.textInputAttempts, 1, 1) : '—'} + (wordStats.textInputAttempts > 0 ? '%' : '')">0%</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>🎯 Multiple Choice</td>
+                                <td th:text="${wordStats.multipleChoiceAttempts}">0</td>
+                                <td th:text="${wordStats.multipleChoiceCorrect}">0</td>
+                                <td>
+                                    <span th:text="${wordStats.multipleChoiceAttempts > 0 ? #numbers.formatDecimal(wordStats.multipleChoiceCorrect * 100.0 / wordStats.multipleChoiceAttempts, 1, 1) : '—'} + (wordStats.multipleChoiceAttempts > 0 ? '%' : '')">0%</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Word Details -->
+            <div class="card mt-2">
+                <div class="card-header">
+                    <h2>Word Information</h2>
+                </div>
+                <div class="card-body">
+                    <table class="results-table">
+                        <tr>
+                            <td><strong>English</strong></td>
+                            <td th:text="${wordCard.englishWord}">word</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Translation</strong></td>
+                            <td th:text="${wordCard.translation}">translation</td>
+                        </tr>
+                        <tr th:if="${wordCard.difficultyLevel}">
+                            <td><strong>Difficulty</strong></td>
+                            <td th:text="${wordCard.difficultyLevel}">easy</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="form-actions mt-2">
+                <a th:href="@{'/analytics/sets/' + ${wordSet.id}}" class="btn btn-ghost">← Back to Set</a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

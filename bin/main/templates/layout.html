@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title layout:fragment="title">English Words App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main.css">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <meta name="_csrf_parameter" th:content="${_csrf.parameterName}">
+    <th:block layout:fragment="head" />
+</head>
+<body>
+    <th:block layout:fragment="content" />
+
+    <script>
+        (function() {
+            const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+            const headerName = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+            if (!token || !headerName) return;
+
+            const originalFetch = window.fetch;
+            window.fetch = function(input, init) {
+                init = init || {};
+                const url = typeof input === 'string' ? input : (input.url || '');
+                const method = (init.method || 'GET').toUpperCase();
+
+                // Only add CSRF header for mutating requests, and NOT for /api/** endpoints
+                if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS'
+                        && !url.startsWith('/api/') && !url.includes('/api/')) {
+                    init.headers = init.headers || {};
+                    if (init.headers instanceof Headers) {
+                        init.headers.set(headerName, token);
+                    } else if (Array.isArray(init.headers)) {
+                        init.headers.push([headerName, token]);
+                    } else {
+                        init.headers[headerName] = token;
+                    }
+                }
+
+                return originalFetch.call(this, input, init);
+            };
+        })();
+    </script>
+</body>
+</html>

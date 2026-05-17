@@ -1,0 +1,160 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-create-set-subscriptions-and-forks
+      author: kilocode
+      comment: Создание таблиц user_set_subscriptions и word_set_forks
+      changes:
+        # Таблица подписок на наборы
+        - createTable:
+            tableName: user_set_subscriptions
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_user_set_subscriptions
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: word_set_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: subscribed_at
+                  type: TIMESTAMP
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+        # FK: user_id -> users
+        - addForeignKeyConstraint:
+            baseTableName: user_set_subscriptions
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_user_set_subscriptions_user
+            onDelete: CASCADE
+
+        # FK: word_set_id -> word_sets
+        - addForeignKeyConstraint:
+            baseTableName: user_set_subscriptions
+            baseColumnNames: word_set_id
+            referencedTableName: word_sets
+            referencedColumnNames: id
+            constraintName: fk_user_set_subscriptions_set
+            onDelete: CASCADE
+
+        # Unique constraint: user + set
+        - addUniqueConstraint:
+            tableName: user_set_subscriptions
+            columnNames: user_id, word_set_id
+            constraintName: uq_user_set_subscription
+
+        # Индексы
+        - createIndex:
+            tableName: user_set_subscriptions
+            indexName: idx_user_set_subscriptions_user
+            columns:
+              - column:
+                  name: user_id
+
+        - createIndex:
+            tableName: user_set_subscriptions
+            indexName: idx_user_set_subscriptions_set
+            columns:
+              - column:
+                  name: word_set_id
+
+        # Таблица форков
+        - createTable:
+            tableName: word_set_forks
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_word_set_forks
+              - column:
+                  name: original_set_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: forked_set_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: forked_at
+                  type: TIMESTAMP
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+        # FK: original_set_id -> word_sets
+        - addForeignKeyConstraint:
+            baseTableName: word_set_forks
+            baseColumnNames: original_set_id
+            referencedTableName: word_sets
+            referencedColumnNames: id
+            constraintName: fk_word_set_forks_original
+            onDelete: CASCADE
+
+        # FK: forked_set_id -> word_sets
+        - addForeignKeyConstraint:
+            baseTableName: word_set_forks
+            baseColumnNames: forked_set_id
+            referencedTableName: word_sets
+            referencedColumnNames: id
+            constraintName: fk_word_set_forks_forked
+            onDelete: CASCADE
+
+        # FK: user_id -> users
+        - addForeignKeyConstraint:
+            baseTableName: word_set_forks
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_word_set_forks_user
+            onDelete: CASCADE
+
+        # Unique: original + forked
+        - addUniqueConstraint:
+            tableName: word_set_forks
+            columnNames: original_set_id, forked_set_id
+            constraintName: uq_word_set_fork
+
+        # Индексы
+        - createIndex:
+            tableName: word_set_forks
+            indexName: idx_word_set_forks_original
+            columns:
+              - column:
+                  name: original_set_id
+
+        - createIndex:
+            tableName: word_set_forks
+            indexName: idx_word_set_forks_forked
+            columns:
+              - column:
+                  name: forked_set_id
+
+        - createIndex:
+            tableName: word_set_forks
+            indexName: idx_word_set_forks_user
+            columns:
+              - column:
+                  name: user_id

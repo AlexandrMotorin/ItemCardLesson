@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Analytics - EnglishCards</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/header :: header}"></div>
+
+        <main class="container main-content">
+            <div class="page-header">
+                <h1>📊 Analytics Overview</h1>
+                <p class="text-muted">Your learning progress across all word sets</p>
+            </div>
+
+            <div th:if="${#lists.isEmpty(setsStats)}" class="empty-state">
+                <div class="empty-state-icon">📊</div>
+                <h3>No data yet</h3>
+                <p>Start studying to see your progress here!</p>
+                <a href="/study" class="btn btn-primary">Go to Study</a>
+            </div>
+
+            <div th:if="${!#lists.isEmpty(setsStats)}" class="card">
+                <div class="card-header">
+                    <h2>Your Word Sets</h2>
+                </div>
+                <div class="card-body">
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Word Set</th>
+                                <th>Words</th>
+                                <th>Attempts</th>
+                                <th>Success Rate</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="stat : ${setsStats}">
+                                <td><strong th:text="${stat.setName}">Set Name</strong></td>
+                                <td th:text="${stat.totalWords}">0</td>
+                                <td th:text="${stat.totalAttempts}">0</td>
+                                <td>
+                                    <div class="progress-bar-container">
+                                        <div class="progress-bar"
+                                             th:style="'width: ' + ${stat.successRate} + '%'"
+                                             th:classappend="${stat.successRate >= 80} ? 'progress-bar-success' : (${stat.successRate >= 50} ? 'progress-bar-warning' : 'progress-bar-danger')">
+                                            <span th:text="${#numbers.formatDecimal(stat.successRate, 1, 1)} + '%'">0%</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a th:href="@{'/analytics/sets/' + ${stat.wordSetId}}" class="btn btn-sm btn-outline">Details</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="form-actions mt-2">
+                <a href="/study" class="btn btn-primary">📚 Study</a>
+                <a href="/cards" class="btn btn-ghost">🏠 Back to Cards</a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

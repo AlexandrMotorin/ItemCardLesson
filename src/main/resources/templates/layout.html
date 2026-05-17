@@ -47,5 +47,22 @@
             };
         })();
     </script>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // Store authentication state in localStorage for client-side use
+        (function() {
+            var isAuth = /*[[${#authentication != null && #authentication.isAuthenticated()}]]*/ false;
+            try {
+                localStorage.setItem('isAuthenticated', isAuth ? 'true' : 'false');
+                // Also store the username
+                var username = /*[[${#authentication != null && #authentication.isAuthenticated()} ? ${#authentication.name} : '']]*/ '';
+                localStorage.setItem('username', username);
+            } catch (e) {
+                console.warn('localStorage not available');
+            }
+        })();
+        /*]]>*/
+    </script>
 </body>
 </html>

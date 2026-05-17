@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-migrate-existing-user-cards
+      author: kilocode
+      comment: Перенос существующих записей из user_cards в word_set_words
+      changes:
+        - sql:
+            comment: Для каждого пользователя, у которого есть записи в user_cards, создаём набор "Мои словечки" (если ещё не создан)
+            sql: >
+              INSERT INTO word_sets (name, description, owner_id, is_system, is_visible)
+              SELECT DISTINCT 'Мои словечки', 'Your personal word collection', uc.user_id, false, true
+              FROM user_cards uc
+              WHERE NOT EXISTS (
+                SELECT 1 FROM word_sets ws
+                WHERE ws.name = 'Мои словечки' AND ws.owner_id = uc.user_id
+              );
+        - sql:
+            comment: Переносим слова из user_cards в word_set_words
+            sql: >
+              INSERT INTO word_set_words (word_set_id, word_card_id)
+              SELECT ws.id, uc.card_id
+              FROM user_cards uc
+              INNER JOIN word_sets ws ON ws.name = 'Мои словечки' AND ws.owner_id = uc.user_id
+              ON CONFLICT DO NOTHING;

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout">
+<head>
+    <title layout:fragment="title">Search Results — English Words App</title>
+    <th:block layout:fragment="head">
+    </th:block>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <div th:replace="fragments/header :: header"></div>
+
+        <div class="container">
+            <div class="page-content">
+                <div class="page-header">
+                    <h1>🔍 Search Results</h1>
+                    <p th:if="${query != null}">
+                        Results for "<span style="font-weight: 600;" th:text="${query}">query</span>"
+                        — <span th:text="${#lists.size(cards)}">0</span> found
+                    </p>
+                </div>
+
+                <div class="alert alert-success" th:if="${successMessage != null}" th:text="${successMessage}">
+                    Success
+                </div>
+
+                <form class="search-form" action="/cards/search" method="GET">
+                    <input type="text" name="query" placeholder="Search for words..." th:value="${query != null ? query : ''}">
+                    <button type="submit" class="btn">🔍 Search</button>
+                </form>
+
+                <div th:if="${cards == null or cards.isEmpty()}" class="empty-state">
+                    <div class="empty-icon">🔍</div>
+                    <p>No word cards found.</p>
+                    <p><a href="/cards/new" class="btn">Create your first card!</a></p>
+                </div>
+
+                <div th:unless="${cards == null or cards.isEmpty()}" class="cards-grid">
+                    <div class="card-item" th:each="card : ${cards}">
+                        <h3 th:text="${card.englishWord}">Word</h3>
+                        <div class="card-translation" th:text="${card.translation}">Translation</div>
+                        <div class="card-example" th:if="${card.example != null and !card.example.isEmpty()}"
+                             th:text="'&ldquo;' + ${card.example} + '&rdquo;'">
+                            Example
+                        </div>
+                        <div class="card-footer">
+                            <span class="difficulty-badge"
+                                  th:classappend="'difficulty-' + ${card.difficultyLevel}"
+                                  th:text="${card.difficultyLevel}">BEGINNER</span>
+                            <div class="card-actions">
+                                <a th:href="@{/cards/{id}(id=${card.id})}" class="btn btn-sm">View</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th:block>
+</body>
+</html>

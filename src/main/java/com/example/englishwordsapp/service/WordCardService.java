@@ -3,6 +3,7 @@ package com.example.englishwordsapp.service;
 import com.example.englishwordsapp.model.UserCard;
 import com.example.englishwordsapp.model.UserCard.StudyStatus;
 import com.example.englishwordsapp.model.WordCard;
+import com.example.englishwordsapp.model.WordSet;
 import com.example.englishwordsapp.repository.UserCardRepository;
 import com.example.englishwordsapp.repository.UserRepository;
 import com.example.englishwordsapp.repository.WordCardRepository;
@@ -26,6 +27,7 @@ public class WordCardService {
     private final WordCardRepository wordCardRepository;
     private final UserCardRepository userCardRepository;
     private final UserRepository userRepository;
+    private final WordSetService wordSetService;
 
     @Transactional(readOnly = true)
     public List<WordCard> getAllCards() {
@@ -41,16 +43,22 @@ public class WordCardService {
         return wordCardRepository.save(wordCard);
     }
 
+    public WordCard createCardAndAddToUserCollection(Long userId, WordCard wordCard) {
+        WordCard saved = wordCardRepository.save(wordCard);
+        WordSet defaultSet = wordSetService.getOrCreateDefaultUserSet(userId);
+        wordSetService.addWordToSet(defaultSet.getId(), saved.getId(), userId);
+        addToUserCards(userId, saved.getId());
+        return saved;
+    }
+
     public WordCard updateCard(Long id, WordCard wordCardDetails) {
         WordCard wordCard = wordCardRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Word card not found with id: " + id));
-
         wordCard.setEnglishWord(wordCardDetails.getEnglishWord());
         wordCard.setTranslation(wordCardDetails.getTranslation());
         wordCard.setExample(wordCardDetails.getExample());
         wordCard.setNotes(wordCardDetails.getNotes());
         wordCard.setDifficultyLevel(wordCardDetails.getDifficultyLevel());
-
         return wordCardRepository.save(wordCard);
     }
 
@@ -73,13 +81,15 @@ public class WordCardService {
         return wordCardRepository.findRandomCard().orElse(null);
     }
 
-    // ========== User collection methods ==========
-
     @Transactional(readOnly = true)
     public List<WordCard> getUserCards(Long userId) {
-        return userCardRepository.findByUserId(userId).stream()
-                .map(UserCard::getWordCard)
-                .collect(Collectors.toList());
+        WordSet defaultSet = wordSetService.getOrCreateDefaultUserSet(userId);
+        return wordSetService.getSetWords(defaultSet.getId());
+    }
+
+    @Transactional(readOnly = true)
+    public List<WordCard> getUserCardsFromSet(Long setId) {
+        return wordSetService.getSetWords(setId);
     }
 
     @Transactional(readOnly = true)
@@ -99,39 +109,21 @@ public class WordCardService {
         return userCardRepository.findByUserId(userId);
     }
 
-    /**
-     * Добавить слово в коллекцию пользователя.
-     * Если слово уже добавлено — возвращает существующую запись.
-     */
     public UserCard addCardToUserCollection(Long userId, Long cardId) {
         if (userCardRepository.existsByUserIdAndWordCardId(userId, cardId)) {
             return userCardRepository.findByUserIdAndWordCardId(userId, cardId).orElseThrow();
         }
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
-        WordCard wordCard = wordCardRepository.findById(cardId)
-                .orElseThrow(() -> new RuntimeException("Word card not found with id: " + cardId));
-
-        UserCard userCard = new UserCard();
-        userCard.setUser(user);
-        userCard.setWordCard(wordCard);
-        userCard.setAddedAt(LocalDateTime.now());
-        userCard.setStatus(StudyStatus.LEARNING);
-
-        return userCardRepository.save(userCard);
+        WordSet defaultSet = wordSetService.getOrCreateDefaultUserSet(userId);
+        wordSetService.addWordToSet(defaultSet.getId(), cardId, userId);
+        return addToUserCards(userId, cardId);
     }
 
-    /**
-     * Удалить слово из коллекции пользователя.
-     */
     public void removeCardFromUserCollection(Long userId, Long cardId) {
+        WordSet defaultSet = wordSetService.getOrCreateDefaultUserSet(userId);
+        wordSetService.removeWordFromSet(defaultSet.getId(), cardId, userId);
         userCardRepository.deleteByUserIdAndWordCardId(userId, cardId);
     }
 
-    /**
-     * Обновить статус изучения слова в коллекции пользователя.
-     */
     public UserCard updateStudyStatus(Long userId, Long cardId, StudyStatus newStatus) {
         UserCard userCard = userCardRepository.findByUserIdAndWordCardId(userId, cardId)
                 .orElseThrow(() -> new RuntimeException("UserCard not found for userId: " + userId + ", cardId: " + cardId));
@@ -149,14 +141,27 @@ public class WordCardService {
         return userCardRepository.findByUserIdAndWordCardId(userId, cardId);
     }
 
-    /**
-     * Поиск по глобальному пулу слов для автодополнения.
-     */
     @Transactional(readOnly = true)
     public List<WordCard> searchGlobalPool(String query) {
         if (query == null || query.trim().isEmpty()) {
             return List.of();
         }
         return wordCardRepository.findByEnglishWordContainingIgnoreCase(query.trim());
+    }
+
+    private UserCard addToUserCards(Long userId, Long cardId) {
+        if (userCardRepository.existsByUserIdAndWordCardId(userId, cardId)) {
+            return userCardRepository.findByUserIdAndWordCardId(userId, cardId).orElseThrow();
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        WordCard wordCard = wordCardRepository.findById(cardId)
+                .orElseThrow(() -> new RuntimeException("Word card not found with id: " + cardId));
+        UserCard userCard = new UserCard();
+        userCard.setUser(user);
+        userCard.setWordCard(wordCard);
+        userCard.setAddedAt(LocalDateTime.now());
+        userCard.setStatus(StudyStatus.LEARNING);
+        return userCardRepository.save(userCard);
     }
 }

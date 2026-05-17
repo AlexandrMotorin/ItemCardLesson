@@ -1,0 +1,177 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-create-study-tables
+      author: kilocode
+      comment: Создание таблиц study_sessions и study_results для функциональности изучения
+      changes:
+        # Таблица сессий изучения
+        - createTable:
+            tableName: study_sessions
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_study_sessions
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: started_at
+                  type: TIMESTAMP
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ended_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: exercise_type
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: word_count
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: correct_count
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: current_index
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: word_ids_order
+                  type: TEXT
+                  constraints:
+                    nullable: true
+
+        # FK: user_id -> users
+        - addForeignKeyConstraint:
+            baseTableName: study_sessions
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_study_sessions_user
+            onDelete: CASCADE
+
+        # Индексы для study_sessions
+        - createIndex:
+            tableName: study_sessions
+            indexName: idx_study_sessions_user
+            columns:
+              - column:
+                  name: user_id
+
+        - createIndex:
+            tableName: study_sessions
+            indexName: idx_study_sessions_started_at
+            columns:
+              - column:
+                  name: started_at
+
+        # Таблица результатов изучения
+        - createTable:
+            tableName: study_results
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_study_results
+              - column:
+                  name: study_session_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: word_card_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: word_set_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: is_correct
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: exercise_type
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: answered_at
+                  type: TIMESTAMP
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+        # FK: study_session_id -> study_sessions
+        - addForeignKeyConstraint:
+            baseTableName: study_results
+            baseColumnNames: study_session_id
+            referencedTableName: study_sessions
+            referencedColumnNames: id
+            constraintName: fk_study_results_session
+            onDelete: CASCADE
+
+        # FK: word_card_id -> word_cards
+        - addForeignKeyConstraint:
+            baseTableName: study_results
+            baseColumnNames: word_card_id
+            referencedTableName: word_cards
+            referencedColumnNames: id
+            constraintName: fk_study_results_word_card
+            onDelete: CASCADE
+
+        # FK: word_set_id -> word_sets
+        - addForeignKeyConstraint:
+            baseTableName: study_results
+            baseColumnNames: word_set_id
+            referencedTableName: word_sets
+            referencedColumnNames: id
+            constraintName: fk_study_results_word_set
+            onDelete: SET NULL
+
+        # Индексы для study_results
+        - createIndex:
+            tableName: study_results
+            indexName: idx_study_results_session
+            columns:
+              - column:
+                  name: study_session_id
+
+        - createIndex:
+            tableName: study_results
+            indexName: idx_study_results_word_card
+            columns:
+              - column:
+                  name: word_card_id
+
+        - createIndex:
+            tableName: study_results
+            indexName: idx_study_results_user_set
+            columns:
+              - column:
+                  name: study_session_id
+              - column:
+                  name: word_set_id

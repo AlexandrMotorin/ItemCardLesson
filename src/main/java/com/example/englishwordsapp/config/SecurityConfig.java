@@ -59,8 +59,9 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/", "/login", "/oauth2/**").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/", "/login", "/register", "/oauth2/**").permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/sets/system").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cards", "/api/cards/search", "/api/cards/random").permitAll()
                         .requestMatchers("/cards/search-global", "/api/cards/search-global").permitAll()
                         .requestMatchers("/api/cards/my", "/api/cards/my/**").authenticated()
@@ -71,9 +72,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/cards/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/cards/**").authenticated()
                         .requestMatchers("/cards/**").authenticated()
+                        .requestMatchers("/study/**", "/api/study/**").authenticated()
+                        .requestMatchers("/analytics/**", "/api/analytics/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")
                         .defaultSuccessUrl("/cards", true)
                         .failureUrl("/login?error=true")
                         .userInfoEndpoint(userInfo -> userInfo
@@ -81,11 +85,17 @@ public class SecurityConfig {
                         )
                 )
                 .formLogin(form ->
-                        form.defaultSuccessUrl("/cards", true)
+                        form.loginPage("/login")
+                                .loginProcessingUrl("/login")
+                                .defaultSuccessUrl("/cards", true)
+                                .failureUrl("/login?error=true")
                                 .permitAll()
                 )
                 .logout(logout -> logout
-                        .logoutSuccessUrl("/")
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout=true")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
                         .permitAll()
                 );
 

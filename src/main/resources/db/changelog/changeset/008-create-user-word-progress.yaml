@@ -1,0 +1,113 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-create-user-word-progress
+      author: kilocode
+      comment: Создание таблицы user_word_progress для отслеживания прогресса по словам
+      changes:
+        # Таблица прогресса пользователя по словам
+        - createTable:
+            tableName: user_word_progress
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_user_word_progress
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: word_card_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: word_set_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_attempts
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: correct_answers
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_practiced_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+
+        # Уникальное ограничение: один пользователь-слово-набор
+        - addUniqueConstraint:
+            tableName: user_word_progress
+            columnNames: user_id, word_card_id, word_set_id
+            constraintName: uk_user_word_progress_user_card_set
+
+        # FK: user_id -> users
+        - addForeignKeyConstraint:
+            baseTableName: user_word_progress
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_user_word_progress_user
+            onDelete: CASCADE
+
+        # FK: word_card_id -> word_cards
+        - addForeignKeyConstraint:
+            baseTableName: user_word_progress
+            baseColumnNames: word_card_id
+            referencedTableName: word_cards
+            referencedColumnNames: id
+            constraintName: fk_user_word_progress_word_card
+            onDelete: CASCADE
+
+        # FK: word_set_id -> word_sets
+        - addForeignKeyConstraint:
+            baseTableName: user_word_progress
+            baseColumnNames: word_set_id
+            referencedTableName: word_sets
+            referencedColumnNames: id
+            constraintName: fk_user_word_progress_word_set
+            onDelete: CASCADE
+
+        # Индексы для user_word_progress
+        - createIndex:
+            tableName: user_word_progress
+            indexName: idx_uwp_user
+            columns:
+              - column:
+                  name: user_id
+
+        - createIndex:
+            tableName: user_word_progress
+            indexName: idx_uwp_word_card
+            columns:
+              - column:
+                  name: word_card_id
+
+        - createIndex:
+            tableName: user_word_progress
+            indexName: idx_uwp_word_set
+            columns:
+              - column:
+                  name: word_set_id
+
+        - createIndex:
+            tableName: user_word_progress
+            indexName: idx_uwp_user_set
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: word_set_id

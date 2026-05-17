@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-add-default-role
+      author: kilocode
+      comment: Добавление роли ROLE_USER по умолчанию
+      changes:
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: name
+                  value: "ROLE_USER"
+              - column:
+                  name: description
+                  value: "Default user role"

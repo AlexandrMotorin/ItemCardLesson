@@ -1,0 +1,127 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-create-word-sets
+      author: kilocode
+      comment: Создание таблиц word_sets и word_set_words для поддержки тематических наборов
+      changes:
+        # Таблица word_sets
+        - createTable:
+            tableName: word_sets
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_word_sets
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: owner_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: is_system
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_visible
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: NOW()
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: NOW()
+
+        # FK: owner -> users
+        - addForeignKeyConstraint:
+            baseTableName: word_sets
+            baseColumnNames: owner_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_word_sets_owner
+            onDelete: SET NULL
+
+        # Таблица word_set_words (M:N связь)
+        - createTable:
+            tableName: word_set_words
+            columns:
+              - column:
+                  name: word_set_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: word_card_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        # PK для word_set_words
+        - addPrimaryKey:
+            tableName: word_set_words
+            columnNames: word_set_id, word_card_id
+            constraintName: pk_word_set_words
+
+        # FK: word_set_id -> word_sets
+        - addForeignKeyConstraint:
+            baseTableName: word_set_words
+            baseColumnNames: word_set_id
+            referencedTableName: word_sets
+            referencedColumnNames: id
+            constraintName: fk_word_set_words_set
+            onDelete: CASCADE
+
+        # FK: word_card_id -> word_cards
+        - addForeignKeyConstraint:
+            baseTableName: word_set_words
+            baseColumnNames: word_card_id
+            referencedTableName: word_cards
+            referencedColumnNames: id
+            constraintName: fk_word_set_words_card
+            onDelete: CASCADE
+
+        # Индексы
+        - createIndex:
+            tableName: word_set_words
+            indexName: idx_word_set_words_set
+            columns:
+              - column:
+                  name: word_set_id
+
+        - createIndex:
+            tableName: word_set_words
+            indexName: idx_word_set_words_card
+            columns:
+              - column:
+                  name: word_card_id
+
+        - createIndex:
+            tableName: word_sets
+            indexName: idx_word_sets_owner
+            columns:
+              - column:
+                  name: owner_id
+
+        - createIndex:
+            tableName: word_sets
+            indexName: idx_word_sets_system
+            columns:
+              - column:
+                  name: is_system

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<header th:fragment="header">
+    <nav class="navbar">
+        <div class="container">
+            <a href="/cards" class="navbar-brand">
+                <span class="navbar-brand-icon">📚</span>
+                EnglishCards
+            </a>
+            <div class="navbar-links">
+                <a href="/cards" sec:authorize="isAuthenticated()">
+                    <span>📋</span>
+                    <span class="nav-label">My Cards</span>
+                </a>
+                <a href="/cards/new">
+                    <span>➕</span>
+                    <span class="nav-label">Add Word</span>
+                </a>
+                <a href="/cards/random" sec:authorize="isAuthenticated()">
+                    <span>🎲</span>
+                    <span class="nav-label">Random</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+</header>
+</html>

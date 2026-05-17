@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout">
+<head>
+    <title layout:fragment="title">Set Detail — English Words App</title>
+    <th:block layout:fragment="head">
+    </th:block>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <div th:replace="fragments/header :: header"></div>
+
+        <div class="container">
+            <div class="page-content" th:object="${set}">
+                <div class="alert alert-success" th:if="${successMessage != null}" th:text="${successMessage}">
+                    Success
+                </div>
+
+                <div class="set-detail-header">
+                    <div>
+                        <h1 th:text="*{name}">Set Name</h1>
+                        <p class="set-detail-meta" th:if="*{description != null and !description.isEmpty()}"
+                           th:text="*{description}">Description</p>
+                        <p class="set-detail-meta">
+                            <span th:text="*{owner != null} ? 'by ' + *{owner.username} : 'System'">owner</span>
+                            &middot;
+                            <span th:text="${#lists.size(words)} + ' words'">0 words</span>
+                        </p>
+                    </div>
+                    <div class="set-detail-actions">
+                        <form th:if="${!isSubscribed}" th:action="@{/sets/{id}/subscribe(id=${set.id})}" method="POST" style="display:inline;">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button type="submit" class="btn btn-success">➕ Subscribe</button>
+                        </form>
+                        <form th:if="${isSubscribed}" th:action="@{/sets/{id}/unsubscribe(id=${set.id})}" method="POST" style="display:inline;">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button type="submit" class="btn btn-secondary">➖ Unsubscribe</button>
+                        </form>
+                        <form th:action="@{/sets/{id}/fork(id=${set.id})}" method="POST" style="display:inline;">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button type="submit" class="btn">🍴 Fork</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div th:if="${words == null or words.isEmpty()}" class="empty-state">
+                    <div class="empty-icon">📭</div>
+                    <p>This set has no words yet.</p>
+                </div>
+
+                <div th:unless="${words == null or words.isEmpty()}" class="cards-grid">
+                    <div class="card-item" th:each="word : ${words}">
+                        <h3 th:text="${word.englishWord}">Word</h3>
+                        <div class="card-translation" th:text="${word.translation}">Translation</div>
+                        <div class="card-example" th:if="${word.example != null and !word.example.isEmpty()}"
+                             th:text="'&ldquo;' + ${word.example} + '&rdquo;'">Example</div>
+                        <div class="card-footer">
+                            <span class="difficulty-badge"
+                                  th:classappend="'difficulty-' + ${word.difficultyLevel}"
+                                  th:text="${word.difficultyLevel}">BEGINNER</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <a href="/sets" class="btn btn-secondary">← Back to Sets</a>
+                </div>
+            </div>
+        </div>
+    </th:block>
+</body>
+</html>

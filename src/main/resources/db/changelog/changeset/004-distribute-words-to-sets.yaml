@@ -1,0 +1,133 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-distribute-words-to-sets
+      author: kilocode
+      comment: Создание системных тематических наборов и распределение существующих слов
+      changes:
+      # Системный набор 1: Essential Words
+      - insert:
+          tableName: word_sets
+          columns:
+            - column:
+                name: name
+                value: Essential Words
+            - column:
+                name: description
+                value: Basic essential English words for everyday use
+            - column:
+                name: is_system
+                valueBoolean: true
+            - column:
+                name: is_visible
+                valueBoolean: true
+
+      # Системный набор 2: Verbs & Actions
+      - insert:
+          tableName: word_sets
+          columns:
+            - column:
+                name: name
+                value: Verbs & Actions
+            - column:
+                name: description
+                value: Action verbs and common activities
+            - column:
+                name: is_system
+                valueBoolean: true
+
+      # Системный набор 3: People & Family
+      - insert:
+          tableName: word_sets
+          columns:
+            - column:
+                name: name
+                value: People & Family
+            - column:
+                name: description
+                value: Words about people, family members and relationships
+            - column:
+                name: is_system
+                valueBoolean: true
+
+      # Системный набор 4: Adjectives & Adverbs
+      - insert:
+          tableName: word_sets
+          columns:
+            - column:
+                name: name
+                value: Adjectives & Adverbs
+            - column:
+                name: description
+                value: Descriptive words and adverbs
+            - column:
+                name: is_system
+                valueBoolean: true
+
+      # Системный набор 5: Daily Life
+      - insert:
+          tableName: word_sets
+          columns:
+            - column:
+                name: name
+                value: Daily Life
+            - column:
+                name: description
+                value: Words for everyday objects, places and situations
+            - column:
+                name: is_system
+                valueBoolean: true
+
+      # Распределение слов по наборам (один sql блок со всеми INSERT)
+      - sql:
+          comment: Распределение всех слов по тематическим наборам
+          sql: >
+            -- Essential Words — базовые служебные слова и местоимения
+            INSERT INTO word_set_words (word_set_id, word_card_id)
+            SELECT (SELECT id FROM word_sets WHERE name = 'Essential Words'), wc.id
+            FROM word_cards wc
+            WHERE wc.english_word IN ('the', 'be', 'to', 'of', 'and', 'a', 'in', 'have', 'I', 'it',
+            'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by',
+            'from', 'they', 'we', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there',
+            'what', 'so', 'up', 'out', 'if', 'about', 'who', 'which', 'me', 'when', 'than',
+            'then', 'now', 'only', 'its', 'over', 'also', 'back', 'after', 'two', 'how', 'our',
+            'first', 'way', 'even', 'any', 'these', 'us', 'yes', 'no', 'just', 'him', 'some',
+            'other', 'into', 'your', 'them', 'most', 'well');
+
+            -- Verbs & Actions — глаголы действия
+            INSERT INTO word_set_words (word_set_id, word_card_id)
+            SELECT (SELECT id FROM word_sets WHERE name = 'Verbs & Actions'), wc.id
+            FROM word_cards wc
+            WHERE wc.english_word IN ('say', 'get', 'go', 'make', 'can', 'like', 'know', 'take',
+            'see', 'come', 'look', 'think', 'use', 'give', 'work', 'want', 'try', 'keep', 'learn',
+            'teach', 'remember', 'forget', 'travel', 'read', 'write', 'speak', 'understand', 'feel',
+            'show', 'bring', 'leave', 'run', 'walk', 'swim', 'sing', 'dance', 'draw', 'build',
+            'break', 'sleep', 'eat', 'drink', 'cook', 'love', 'hate', 'enjoy', 'hope', 'believe',
+            'mean', 'need', 'start', 'finish', 'stop', 'continue', 'change', 'buy', 'sell', 'pay',
+            'find', 'lose', 'open', 'close');
+
+            -- People & Family — люди, семья, отношения
+            INSERT INTO word_set_words (word_set_id, word_card_id)
+            SELECT (SELECT id FROM word_sets WHERE name = 'People & Family'), wc.id
+            FROM word_cards wc
+            WHERE wc.english_word IN ('people', 'friend', 'family', 'mother', 'father', 'brother',
+            'sister', 'child', 'student', 'teacher', 'name', 'hello', 'goodbye', 'please', 'thank',
+            'sorry');
+
+            -- Adjectives & Adverbs — прилагательные и наречия
+            INSERT INTO word_set_words (word_set_id, word_card_id)
+            SELECT (SELECT id FROM word_sets WHERE name = 'Adjectives & Adverbs'), wc.id
+            FROM word_cards wc
+            WHERE wc.english_word IN ('good', 'great', 'important', 'beautiful', 'happy', 'sad',
+            'big', 'small', 'hot', 'cold', 'young', 'old', 'long', 'short', 'high', 'low', 'fast',
+            'slow', 'easy', 'hard', 'late', 'early', 'near', 'far', 'right', 'wrong', 'new', 'able',
+            'always', 'never', 'sometimes', 'often', 'usually', 'rarely', 'already', 'yet', 'still',
+            'again', 'too', 'very', 'really', 'quite', 'almost', 'enough', 'maybe', 'perhaps',
+            'certainly', 'definitely', 'probably', 'must', 'should', 'may', 'could');
+
+            -- Daily Life — повседневные объекты, места, ситуации
+            INSERT INTO word_set_words (word_set_id, word_card_id)
+            SELECT (SELECT id FROM word_sets WHERE name = 'Daily Life'), wc.id
+            FROM word_cards wc
+            WHERE wc.english_word IN ('time', 'year', 'day', 'house', 'book', 'water', 'food',
+            'city', 'country', 'world', 'school', 'car', 'street', 'money', 'price', 'question',
+            'answer', 'help');

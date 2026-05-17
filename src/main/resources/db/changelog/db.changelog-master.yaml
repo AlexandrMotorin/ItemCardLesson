@@ -3,3 +3,17 @@ databaseChangeLog:
       file: db/changelog/changeset/001-create-user-cards-table.yaml
   - include:
       file: db/changelog/changeset/002-load-english-vocabulary.yaml
+  - include:
+      file: db/changelog/changeset/003-create-word-sets.yaml
+  - include:
+      file: db/changelog/changeset/004-distribute-words-to-sets.yaml
+  - include:
+      file: db/changelog/changeset/005-create-set-subscriptions-and-forks.yaml
+  - include:
+      file: db/changelog/changeset/006-add-default-role.yaml
+  - include:
+      file: db/changelog/changeset/007-create-study-tables.yaml
+  - include:
+      file: db/changelog/changeset/008-create-user-word-progress.yaml
+  - include:
+      file: db/changelog/changeset/009-migrate-existing-user-cards.yaml

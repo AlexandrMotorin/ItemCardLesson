@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Study Session Results</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/header :: header}"></div>
+
+        <main class="container main-content">
+            <div class="page-header">
+                <h1>📊 Session Results</h1>
+                <p class="text-muted">Your study session is complete!</p>
+            </div>
+
+            <!-- Summary Card -->
+            <div class="card mb-2">
+                <div class="card-header">
+                    <h2>Summary</h2>
+                </div>
+                <div class="card-body">
+                    <div class="results-summary">
+                        <div class="result-stat">
+                            <span class="result-stat-icon">📝</span>
+                            <span class="result-stat-label">Total Words</span>
+                            <span class="result-stat-value" th:text="${session.wordCount}">0</span>
+                        </div>
+                        <div class="result-stat result-stat-correct">
+                            <span class="result-stat-icon">✅</span>
+                            <span class="result-stat-label">Correct</span>
+                            <span class="result-stat-value" th:text="${correctCount}">0</span>
+                        </div>
+                        <div class="result-stat result-stat-incorrect">
+                            <span class="result-stat-icon">❌</span>
+                            <span class="result-stat-label">Incorrect</span>
+                            <span class="result-stat-value" th:text="${incorrectCount}">0</span>
+                        </div>
+                        <div class="result-stat"
+                             th:classappend="${percentage >= 80} ? 'result-stat-great' : (${percentage >= 50} ? 'result-stat-good' : 'result-stat-poor')">
+                            <span class="result-stat-icon">🎯</span>
+                            <span class="result-stat-label">Score</span>
+                            <span class="result-stat-value" th:text="${percentage} + '%'">0%</span>
+                        </div>
+                    </div>
+
+                    <!-- Encouragement message -->
+                    <div class="encouragement" th:if="${percentage >= 80}">
+                        <p>🌟 Excellent work! Keep it up!</p>
+                    </div>
+                    <div class="encouragement" th:if="${percentage >= 50 and percentage < 80}">
+                        <p>👍 Good effort! A bit more practice and you'll master these words.</p>
+                    </div>
+                    <div class="encouragement" th:if="${percentage < 50}">
+                        <p>💪 Keep practicing! Review the words and try again.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Results -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Detailed Results</h2>
+                </div>
+                <div class="card-body">
+                    <div th:if="${#lists.isEmpty(results)}" class="empty-state">
+                        <p>No results recorded.</p>
+                    </div>
+                    <div th:unless="${#lists.isEmpty(results)}" class="results-table-container">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>English Word</th>
+                                    <th>Translation</th>
+                                    <th>Result</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="result, iterStat : ${results}"
+                                    th:class="${result.correct} ? 'result-row-correct' : 'result-row-incorrect'">
+                                    <td th:text="${iterStat.count}">1</td>
+                                    <td th:text="${result.wordCard.englishWord}">word</td>
+                                    <td th:text="${result.wordCard.translation}">translation</td>
+                                    <td>
+                                        <span th:if="${result.correct}" class="badge badge-success">✅ Correct</span>
+                                        <span th:unless="${result.correct}" class="badge badge-error">❌ Incorrect</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions mt-2">
+                <a href="/study" class="btn btn-primary">📚 Study Again</a>
+                <a href="/cards" class="btn btn-ghost">🏠 Back to Cards</a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

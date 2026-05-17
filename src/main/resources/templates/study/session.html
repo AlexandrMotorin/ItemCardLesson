@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Study Session</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/header :: header}"></div>
+
+        <main class="container main-content">
+            <div class="page-header">
+                <h1>📖 Study Session</h1>
+                <div class="progress-info">
+                    <span class="badge" th:text="'Word ' + ${currentIndex} + ' of ' + ${totalWords}">
+                        Word 1 of 10
+                    </span>
+                    <span class="badge" th:if="${session.exerciseType.name() == 'TEXT_INPUT'}">✏️ Text Input</span>
+                    <span class="badge" th:if="${session.exerciseType.name() == 'MULTIPLE_CHOICE'}">🎯 Multiple Choice</span>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-bar-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" th:style="'width: ' + (${currentIndex} * 100 / ${totalWords}) + '%'"></div>
+                </div>
+            </div>
+
+            <!-- Flash message for last result -->
+            <div th:if="${lastResult != null}" th:class="${lastResult} ? 'alert alert-success' : 'alert alert-error'" class="alert" role="alert">
+                <th:block th:if="${lastResult}">✅ Correct!</th:block>
+                <th:block th:unless="${lastResult}">✗</th:block>
+                <span th:text="${lastResult} ? 'Correct!' : 'Incorrect!'">Correct!</span>
+            </div>
+
+            <!-- Word Card -->
+            <div class="card study-card">
+                <div class="card-body study-card-body">
+                    <div class="english-word-display">
+                        <h2 class="english-word" th:text="${word.englishWord}">hello</h2>
+                    </div>
+
+                    <div th:if="${word.example}" class="example}" class="example-section">
+                        <p class="example-text" th:text="'💬 ' + ${word.example}">Example sentence</p>
+                    </div>
+
+                    <div class="study-form-section">
+                        <th:block th:switch="${session.exerciseType.name()}">
+                            <!-- TEXT_INPUT -->
+                            <div th:case="'TEXT_INPUT'">
+                                <form th:action="@{/study/session/{id}/answer(id=${session.id})}" method="POST" class="answer-form">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                    <input type="hidden" name="wordCardId" th:value="${word.id}">
+                                    <input type="hidden" name="exerciseType" value="TEXT_INPUT">
+
+                                    <div class="form-group">
+                                        <label for="answer" class="form-label">Enter the translation:</label>
+                                        <input type="text" id="answer" name="answer" class="form-input form-input-lg"
+                                               placeholder="Type translation here..." autocomplete="off" autofocus>
+                                    </div>
+
+                                    <div class="form-actions">
+                                        <button type="submit" class="btn btn-primary btn-lg">✓ Check Answer</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- MULTIPLE_CHOICE -->
+                            <div th:case="'MULTIPLE_CHOICE'">
+                                <form th:action="@{/study/session/{id}/answer(id=${session.id})}" method="POST" class="answer-form">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                    <input type="hidden" name="wordCardId" th:value="${word.id}">
+                                    <input type="hidden" name="exerciseType" value="MULTIPLE_CHOICE">
+
+                                    <div class="form-group">
+                                        <label class="form-label">Choose the correct translation:</label>
+                                        <div class="choices-grid">
+                                            <button type="submit" name="answer" th:each="choice : ${choices}"
+                                                    th:value="${choice.id}"
+                                                    class="btn btn-choice">
+                                                <span class="choice-text" th:text="${choice.englishWord}">word</span>
+                                                <span class="choice-subtitle" th:text="${choice.translation}">translation</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </th:block>
+
+                        <!-- Skip button -->
+                        <form th:action="@{/study/session/{id}/next(id=${session.id})}" method="GET" class="skip-form">
+                            <button type="submit" class="btn btn-ghost">⏭ Skip this word</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
