@@ -1,51 +1,55 @@
 package com.example.englishwordsapp.model;
 
+import com.example.englishwordsapp.security.User;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
-@Table(name = "word_cards")
+@Table(name = "user_cards",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "card_id"}))
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
 @NoArgsConstructor
 @AllArgsConstructor
-public class WordCard {
+public class UserCard {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "English word is required")
-    @Column(nullable = false)
-    private String englishWord;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    @ToString.Exclude
+    private User user;
 
-    @NotBlank(message = "Translation is required")
-    @Column(nullable = false)
-    private String translation;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "card_id", nullable = false)
+    @ToString.Exclude
+    private WordCard wordCard;
 
-    @Column(columnDefinition = "TEXT")
-    private String example;
-
-    @Column(columnDefinition = "TEXT")
-    private String notes;
+    @Column(name = "added_at", nullable = false)
+    private LocalDateTime addedAt;
 
     @Enumerated(EnumType.STRING)
-    private DifficultyLevel difficultyLevel = DifficultyLevel.BEGINNER;
+    @Column(nullable = false)
+    private StudyStatus status = StudyStatus.LEARNING;
 
-    public enum DifficultyLevel {
-        BEGINNER,
-        INTERMEDIATE,
-        ADVANCED
+    @PrePersist
+    protected void onCreate() {
+        if (addedAt == null) {
+            addedAt = LocalDateTime.now();
+        }
     }
 
-    public boolean isSelected(DifficultyLevel lvl) {
-        return difficultyLevel != null && difficultyLevel == lvl;
+    public enum StudyStatus {
+        LEARNING,
+        KNOWN
     }
 
     @Override
@@ -61,8 +65,8 @@ public class WordCard {
         if (thisEffectiveClass != objectEffectiveClass) {
             return false;
         }
-        WordCard wordCard = (WordCard) o;
-        return getId() != null && Objects.equals(getId(), wordCard.getId());
+        UserCard userCard = (UserCard) o;
+        return getId() != null && Objects.equals(getId(), userCard.getId());
     }
 
     @Override

@@ -1,14 +1,22 @@
 package com.example.englishwordsapp.controller;
 
+import com.example.englishwordsapp.model.UserCard;
 import com.example.englishwordsapp.model.WordCard;
+import com.example.englishwordsapp.security.CustomUserDetails;
 import com.example.englishwordsapp.service.WordCardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/cards")
@@ -18,44 +26,150 @@ public class WordCardController {
     private final WordCardService wordCardService;
 
     @GetMapping
-    public String listCards(Model model) {
-        model.addAttribute("cards", wordCardService.getAllCards());
+    public String listCards(Model model,
+                            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return "redirect:/login";
+        }
+        Long userId = userDetails.getId();
+        List<WordCard> userCards = wordCardService.getUserCards(userId);
+        List<UserCard> userCardEntities = wordCardService.getUserCardEntities(userId);
+        Map<Long, UserCard> userCardMap = userCardEntities.stream()
+                .collect(Collectors.toMap(uc -> uc.getWordCard().getId(), Function.identity()));
+        model.addAttribute("cards", userCards);
+        model.addAttribute("userCardMap", userCardMap);
         return "index";
     }
 
     @GetMapping("/new")
-    public String showNewCardForm(Model model) {
-        WordCard wordCard = new WordCard();
-        model.addAttribute("wordCard", wordCard);
+    public String showAddCardForm(Model model,
+                                  @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return "redirect:/login";
+        }
+        if (!model.containsAttribute("wordCard")) {
+            model.addAttribute("wordCard", new WordCard());
+        }
         return "fragments/card-form";
     }
 
     @PostMapping
-    public String createCard(@Valid @ModelAttribute("wordCard") WordCard wordCard,
-                             BindingResult bindingResult,
-                             Model model,
-                             RedirectAttributes redirectAttributes) {
+    public String addCardToCollection(@Valid @ModelAttribute("wordCard") WordCard wordCard,
+                                      BindingResult bindingResult,
+                                      Model model,
+                                      @AuthenticationPrincipal CustomUserDetails userDetails,
+                                      RedirectAttributes redirectAttributes) {
+        if (userDetails == null) {
+            return "redirect:/login";
+        }
+        Long userId = userDetails.getId();
+
         if (bindingResult.hasErrors()) {
             model.addAttribute("errors", bindingResult);
             return "fragments/card-form";
         }
-        wordCardService.createCard(wordCard);
-        redirectAttributes.addFlashAttribute("successMessage", "Card created successfully!");
+
+        if (wordCard.getId() != null) {
+            wordCardService.addCardToUserCollection(userId, wordCard.getId());
+            redirectAttributes.addFlashAttribute("successMessage", "Word added to your collection!");
+            return "redirect:/cards";
+        }
+
+        WordCard savedCard = wordCardService.createCard(wordCard);
+        wordCardService.addCardToUserCollection(userId, savedCard.getId());
+        redirectAttributes.addFlashAttribute("successMessage", "New word created and added to your collection!");
         return "redirect:/cards";
     }
 
     @GetMapping("/{id}")
-    public String viewCard(@PathVariable Long id, Model model) {
+    public String viewCard(@PathVariable Long id, Model model,
+                           @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return "redirect:/login";
+        }
+        Long userId = userDetails.getId();
+
         return wordCardService.getCardById(id)
                 .map(card -> {
                     model.addAttribute("card", card);
+                    model.addAttribute("inCollection", wordCardService.isCardInUserCollection(userId, id));
+                    wordCardService.getUserCard(userId, id).ifPresent(uc ->
+                            model.addAttribute("userCard", uc)
+                    );
                     return "fragments/card-detail";
                 })
                 .orElse("redirect:/cards");
     }
 
+    @PostMapping("/{id}/add")
+    public String addToCollection(@PathVariable Long id,
+                                  @AuthenticationPrincipal CustomUserDetails userDetails,
+                                  RedirectAttributes redirectAttributes) {
+        if (userDetails == null) {
+            return "redirect:/login";
+        }
+        wordCardService.addCardToUserCollection(userDetails.getId(), id);
+        redirectAttributes.addFlashAttribute("successMessage", "Word added to your collection!");
+        return "redirect:/cards";
+    }
+
+    @PostMapping("/{id}/remove")
+    public String removeFromCollection(@PathVariable Long id,
+                                       @AuthenticationPrincipal CustomUserDetails userDetails,
+                                       RedirectAttributes redirectAttributes) {
+        if (userDetails == null) {
+            return "redirect:/login";
+        }
+        wordCardService.removeCardFromUserCollection(userDetails.getId(), id);
+        redirectAttributes.addFlashAttribute("successMessage", "Word removed from your collection!");
+        return "redirect:/cards";
+    }
+
+    @PostMapping("/{id}/status")
+    public String updateStatus(@PathVariable Long id,
+                               @RequestParam UserCard.StudyStatus status,
+                               @AuthenticationPrincipal CustomUserDetails userDetails,
+                               RedirectAttributes redirectAttributes) {
+        if (userDetails == null) {
+            return "redirect:/login";
+        }
+        wordCardService.updateStudyStatus(userDetails.getId(), id, status);
+        redirectAttributes.addFlashAttribute("successMessage", "Study status updated!");
+        return "redirect:/cards/" + id;
+    }
+
+    @GetMapping("/random")
+    public String randomCard(Model model,
+                             @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return "redirect:/login";
+        }
+        Long userId = userDetails.getId();
+        List<WordCard> userCards = wordCardService.getUserCards(userId);
+        if (userCards.isEmpty()) {
+            return "redirect:/cards/new";
+        }
+        WordCard card = userCards.get((int) (Math.random() * userCards.size()));
+        model.addAttribute("card", card);
+        model.addAttribute("inCollection", true);
+        wordCardService.getUserCard(userId, card.getId()).ifPresent(uc ->
+                model.addAttribute("userCard", uc)
+        );
+        return "fragments/card-detail";
+    }
+
+    @GetMapping("/search-global")
+    @ResponseBody
+    public List<WordCard> searchGlobalPool(@RequestParam String query) {
+        return wordCardService.searchGlobalPool(query);
+    }
+
     @GetMapping("/{id}/edit")
-    public String showEditCardForm(@PathVariable Long id, Model model) {
+    public String showEditCardForm(@PathVariable Long id, Model model,
+                                   @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return "redirect:/login";
+        }
         return wordCardService.getCardById(id)
                 .map(card -> {
                     model.addAttribute("wordCard", card);
@@ -84,22 +198,5 @@ public class WordCardController {
         wordCardService.deleteCard(id);
         redirectAttributes.addFlashAttribute("successMessage", "Card deleted successfully!");
         return "redirect:/cards";
-    }
-
-    @GetMapping("/random")
-    public String randomCard(Model model) {
-        WordCard card = wordCardService.getRandomCard();
-        if (card == null) {
-            return "redirect:/cards/new";
-        }
-        model.addAttribute("card", card);
-        return "fragments/card-detail";
-    }
-
-    @GetMapping("/search")
-    public String searchCards(@RequestParam String query, Model model) {
-        model.addAttribute("cards", wordCardService.searchCards(query));
-        model.addAttribute("query", query);
-        return "fragments/cards-list";
     }
 }

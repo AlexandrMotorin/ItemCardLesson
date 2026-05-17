@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout">
+<head>
+    <title layout:fragment="title">[[${card.englishWord}]] — Word Card</title>
+    <th:block layout:fragment="head">
+    </th:block>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <div th:replace="fragments/header :: header"></div>
+
+        <div class="container">
+            <div class="page-content">
+                <div class="page-header">
+                    <h1>📖 Word Card Details</h1>
+                </div>
+
+                <!-- Flashcard with 3D Flip -->
+                <div class="flashcard-container">
+                    <div class="flashcard" id="flashcard" onclick="this.classList.toggle('flipped')">
+                        <div class="flashcard-inner">
+                            <!-- Front -->
+                            <div class="flashcard-front">
+                                <div class="word" th:text="${card.englishWord}">Word</div>
+                                <span class="difficulty-badge"
+                                      th:classappend="'difficulty-' + ${card.difficultyLevel}"
+                                      th:text="${card.difficultyLevel}">BEGINNER</span>
+                                <div class="flip-hint">
+                                    <span>👆</span>
+                                    <span>Click to reveal translation</span>
+                                </div>
+                            </div>
+                            <!-- Back -->
+                            <div class="flashcard-back">
+                                <div class="back-word" th:text="${card.englishWord}">Word</div>
+                                <div class="back-badge">
+                                    <span class="difficulty-badge"
+                                          th:classappend="'difficulty-' + ${card.difficultyLevel}"
+                                          th:text="${card.difficultyLevel}">BEGINNER</span>
+                                </div>
+
+                                <div class="back-section">
+                                    <div class="back-section-label">Translation</div>
+                                    <div class="back-section-content" th:text="${card.translation}">Translation</div>
+                                </div>
+
+                                <div class="back-section" th:if="${card.example != null and !card.example.isEmpty()}">
+                                    <div class="back-section-label">Example</div>
+                                    <div class="back-section-content" th:text="${card.example}">Example text</div>
+                                </div>
+
+                                <div class="back-section" th:if="${card.notes != null and !card.notes.isEmpty()}">
+                                    <div class="back-section-label">Notes</div>
+                                    <div class="back-section-content" th:text="${card.notes}">Notes text</div>
+                                </div>
+
+                                <div class="flip-hint" style="margin-top: 16px;">
+                                    <span>👆</span>
+                                    <span>Click to flip back</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collection status -->
+                <div th:if="${inCollection}" class="study-status-section" style="text-align: center; margin: 16px 0;">
+                    <p>
+                        Status:
+                        <span th:if="${userCard != null and userCard.status.name() == 'LEARNING'}"
+                              style="display: inline-block; padding: 4px 12px; border-radius: 12px; background: #fef3c7; color: #92400e; font-weight: 500;">
+                            🔄 Learning
+                        </span>
+                        <span th:if="${userCard != null and userCard.status.name() == 'KNOWN'}"
+                              style="display: inline-block; padding: 4px 12px; border-radius: 12px; background: #d1fae5; color: #065f46; font-weight: 500;">
+                            ✅ Known
+                        </span>
+                    </p>
+                    <form th:if="${userCard != null}" th:action="@{/cards/{id}/status(id=${card.id})}" method="POST"
+                          style="display: inline-block; margin-top: 8px;">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <select name="status" onchange="this.form.submit()" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <option value="LEARNING" th:selected="${userCard.status.name() == 'LEARNING'}">🔄 Learning</option>
+                            <option value="KNOWN" th:selected="${userCard.status.name() == 'KNOWN'}">✅ Known</option>
+                        </select>
+                        <noscript><button type="submit" class="btn btn-sm">Update</button></noscript>
+                    </form>
+                </div>
+
+                <!-- Actions -->
+                <div class="detail-actions">
+                    <div th:if="${inCollection}">
+                        <form th:action="@{/cards/{id}/remove(id=${card.id})}" method="POST" style="display:inline;">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button type="submit" class="btn btn-danger"
+                                    onclick="return confirm('Remove this word from your collection?')">
+                                🗑️ Remove from Collection
+                            </button>
+                        </form>
+                        <a href="/cards/random" class="btn btn-success">🎲 Next Random</a>
+                    </div>
+                    <div th:unless="${inCollection}">
+                        <form th:action="@{/cards/{id}/add(id=${card.id})}" method="POST" style="display:inline;">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button type="submit" class="btn">➕ Add to My Collection</button>
+                        </form>
+                    </div>
+                    <a href="/cards/new" class="btn btn-secondary">➕ Add More Words</a>
+                    <a href="/cards" class="btn btn-secondary">← Back to My Cards</a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.getElementById('flashcard').addEventListener('keydown', function(e) {
+                if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    this.classList.toggle('flipped');
+                }
+            });
+            document.getElementById('flashcard').setAttribute('tabindex', '0');
+            document.getElementById('flashcard').setAttribute('role', 'button');
+            document.getElementById('flashcard').setAttribute('aria-label', 'Click to flip the card');
+        </script>
+    </th:block>
+</body>
+</html>

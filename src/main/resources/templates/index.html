@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout">
+<head>
+    <title layout:fragment="title">My Cards — English Words App</title>
+    <th:block layout:fragment="head">
+    </th:block>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <div th:replace="fragments/header :: header"></div>
+
+        <div class="container">
+            <!-- Empty state: shown when no cards in user's collection -->
+            <div th:if="${cards == null or cards.isEmpty()}" class="hero">
+                <span class="hero-icon">📚</span>
+                <h1>My Word Collection</h1>
+                <p>
+                    You don't have any words in your collection yet.
+                    Start learning by adding words from the global vocabulary!
+                </p>
+                <div class="hero-actions">
+                    <a href="/cards/new" class="btn">➕ Add Word from Vocabulary</a>
+                </div>
+            </div>
+
+            <!-- Cards list: shown when user has cards -->
+            <div th:if="${cards != null and !cards.isEmpty()}" class="page-content">
+                <div class="page-header">
+                    <h1>📋 My Words</h1>
+                    <p th:if="${#lists.size(cards) == 1}">1 word in your collection</p>
+                    <p th:unless="${#lists.size(cards) == 1}">
+                        <span th:text="${#lists.size(cards)}">0</span> words in your collection
+                    </p>
+                </div>
+
+                <div class="alert alert-success" th:if="${successMessage != null}" th:text="${successMessage}">
+                    Success
+                </div>
+
+                <div th:if="${cards != null and !cards.isEmpty()}" class="cards-grid">
+                    <div class="card-item" th:each="card : ${cards}"
+                         th:with="userCard=${userCardMap[card.id]}">
+                        <h3 th:text="${card.englishWord}">Word</h3>
+                        <div class="card-translation" th:text="${card.translation}">Translation</div>
+                        <div class="card-example" th:if="${card.example != null and !card.example.isEmpty()}"
+                             th:text="'&ldquo;' + ${card.example} + '&rdquo;'">
+                            Example
+                        </div>
+                        <div class="card-footer">
+                            <div class="card-status-row">
+                                <span class="difficulty-badge"
+                                      th:classappend="'difficulty-' + ${card.difficultyLevel}"
+                                      th:text="${card.difficultyLevel}">BEGINNER</span>
+                                <span class="status-badge"
+                                      th:classappend="'status-' + ${#strings.toLowerCase(userCard.status)}"
+                                      th:text="${userCard.status}">LEARNING</span>
+                            </div>
+                            <div class="card-actions">
+                                <a th:href="@{/cards/{id}(id=${card.id})}" class="btn btn-sm">View</a>
+                                <form th:action="@{/cards/{id}/remove(id=${card.id})}" method="POST" style="display:inline;">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                    <button type="submit" class="btn btn-sm btn-danger"
+                                            onclick="return confirm('Remove this word from your collection?')">
+                                        Remove
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 32px;">
+                    <a href="/cards/new" class="btn">➕ Add More Words</a>
+                </div>
+            </div>
+        </div>
+    </th:block>
+</body>
+</html>

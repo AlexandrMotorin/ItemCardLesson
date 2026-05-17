@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-load-english-vocabulary
+      author: kilocode
+      comment: Загрузка базового словаря английских слов в таблицу word_cards
+      changes:
+        - loadData:
+            tableName: word_cards
+            file: db/data/english-vocabulary.csv
+            relativeToChangelogFile: false
+            separator: ","
+            encoding: UTF-8
+            headerLines: 1
+            columns:
+              - column:
+                  name: english_word
+                  type: STRING
+              - column:
+                  name: translation
+                  type: STRING
+              - column:
+                  name: difficulty_level
+                  type: STRING

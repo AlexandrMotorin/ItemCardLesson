@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout">
+<head>
+    <title layout:fragment="title">Add Word — English Words App</title>
+    <th:block layout:fragment="head">
+        <style>
+            .search-container {
+                position: relative;
+                margin-bottom: 24px;
+            }
+            .search-results {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                max-height: 300px;
+                overflow-y: auto;
+                z-index: 100;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                display: none;
+            }
+            .search-results.active {
+                display: block;
+            }
+            .search-result-item {
+                padding: 12px 16px;
+                cursor: pointer;
+                border-bottom: 1px solid #f1f5f9;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .search-result-item:hover {
+                background-color: #f8fafc;
+            }
+            .search-result-item .en {
+                font-weight: 600;
+                color: #1e293b;
+            }
+            .search-result-item .ru {
+                color: #64748b;
+                font-size: 0.9em;
+            }
+            .search-result-item .badge {
+                font-size: 0.75em;
+                padding: 2px 8px;
+                border-radius: 12px;
+                background: #e2e8f0;
+                color: #475569;
+            }
+            .create-new-section {
+                margin-top: 24px;
+                padding-top: 24px;
+                border-top: 1px solid #e2e8f0;
+            }
+            .toggle-create-new {
+                color: #6366f1;
+                cursor: pointer;
+                font-weight: 500;
+                border: none;
+                background: none;
+                font-size: 1em;
+            }
+            .toggle-create-new:hover {
+                color: #4f46e5;
+            }
+            .selected-word-info {
+                background: #f0f9ff;
+                border: 1px solid #bae6fd;
+                border-radius: 8px;
+                padding: 16px;
+                margin-bottom: 16px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .selected-word-info .word {
+                font-weight: 600;
+                color: #0369a1;
+            }
+            .selected-word-info .translation {
+                color: #0ea5e9;
+            }
+            .selected-word-info .change-btn {
+                font-size: 0.85em;
+                color: #6366f1;
+                cursor: pointer;
+                border: none;
+                background: none;
+                text-decoration: underline;
+            }
+            .hidden-form {
+                display: none;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <div th:replace="fragments/header :: header"></div>
+
+        <div class="container">
+            <div class="page-content">
+                <div class="page-header">
+                    <h1>➕ Add Word to Collection</h1>
+                    <p>Search the vocabulary or create a new word</p>
+                </div>
+
+                <div class="alert alert-danger" th:if="${errors != null}">
+                    <ul>
+                        <li th:each="error : ${errors.allErrors}" th:text="${error.defaultMessage}">Error</li>
+                    </ul>
+                </div>
+
+                <!-- Step 1: Search from global pool -->
+                <div class="search-container" id="searchContainer">
+                    <label for="wordSearch" class="form-label">
+                        🔍 Search existing words
+                    </label>
+                    <input type="text" id="wordSearch"
+                           placeholder="Type an English word..."
+                           autocomplete="off"
+                           class="search-input">
+                    <div class="search-results" id="searchResults"></div>
+                </div>
+
+                <!-- Selected word info -->
+                <div class="selected-word-info is-hidden" id="selectedWordInfo">
+                    <div>
+                        <span class="word" id="selectedWordDisplay"></span>
+                        &mdash;
+                        <span class="translation" id="selectedTranslationDisplay"></span>
+                    </div>
+                    <button class="change-btn" onclick="clearSelection()">Change</button>
+                </div>
+
+                <!-- Hidden form for submitting selected existing word -->
+                <form id="addExistingForm" action="/cards" method="POST" class="hidden-form">
+                    <input type="hidden" name="id" id="selectedCardId">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                </form>
+
+                <!-- Create new word section -->
+                <div class="create-new-section">
+                    <button type="button" class="toggle-create-new" id="toggleCreateForm">
+                        ✏️ Didn't find it? Create a new word
+                    </button>
+
+                    <form id="createNewForm" action="/cards" method="POST" class="is-hidden">
+                        <input type="hidden" name="id" value="">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                        <div class="form-group">
+                            <label for="englishWord">English Word *</label>
+                            <input type="text" id="englishWord" name="englishWord"
+                                   th:value="${wordCard?.englishWord}"
+                                   placeholder="Enter the English word"
+                                   required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="translation">Translation *</label>
+                            <input type="text" id="translation" name="translation"
+                                   th:value="${wordCard?.translation}"
+                                   placeholder="Enter the translation"
+                                   required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="example">Example Sentence</label>
+                            <textarea id="example" name="example" rows="2"
+                                      placeholder="An example sentence using this word"
+                                      th:text="${wordCard?.example}"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notes">Notes</label>
+                            <textarea id="notes" name="notes" rows="2"
+                                      placeholder="Any additional notes"
+                                      th:text="${wordCard?.notes}"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="difficultyLevel">Difficulty Level</label>
+                            <select id="difficultyLevel" name="difficultyLevel">
+                                <option value="BEGINNER" th:selected="${wordCard?.difficultyLevel?.name() == 'BEGINNER'}">Beginner</option>
+                                <option value="INTERMEDIATE" th:selected="${wordCard?.difficultyLevel?.name() == 'INTERMEDIATE'}">Intermediate</option>
+                                <option value="ADVANCED" th:selected="${wordCard?.difficultyLevel?.name() == 'ADVANCED'}">Advanced</option>
+                            </select>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn">➕ Create & Add to Collection</button>
+                            <a href="/cards" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="mt-4">
+                    <a href="/cards" class="btn btn-secondary">← Back to My Cards</a>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const searchInput = document.getElementById('wordSearch');
+            const searchResults = document.getElementById('searchResults');
+            const selectedWordInfo = document.getElementById('selectedWordInfo');
+            const selectedCardId = document.getElementById('selectedCardId');
+            const selectedWordDisplay = document.getElementById('selectedWordDisplay');
+            const selectedTranslationDisplay = document.getElementById('selectedTranslationDisplay');
+            const addExistingForm = document.getElementById('addExistingForm');
+            const createNewForm = document.getElementById('createNewForm');
+            const toggleCreateBtn = document.getElementById('toggleCreateForm');
+
+            let searchTimeout = null;
+
+            function clearSelection() {
+                selectedCardId.value = '';
+                selectedWordInfo.classList.add('is-hidden');
+                searchInput.value = '';
+                searchInput.classList.remove('is-hidden');
+                searchInput.focus();
+            }
+
+            function selectWord(card) {
+                selectedCardId.value = card.id;
+                selectedWordDisplay.textContent = card.englishWord;
+                selectedTranslationDisplay.textContent = card.translation;
+                selectedWordInfo.classList.remove('is-hidden');
+                searchInput.classList.add('is-hidden');
+                searchResults.classList.remove('active');
+                searchResults.innerHTML = '';
+                // Automatically submit and add to collection
+                addExistingForm.submit();
+            }
+
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim();
+                if (query.length < 1) {
+                    searchResults.classList.remove('active');
+                    searchResults.innerHTML = '';
+                    return;
+                }
+
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    fetch('/cards/search-global?query=' + encodeURIComponent(query))
+                        .then(response => response.json())
+                        .then(words => {
+                            searchResults.innerHTML = '';
+                            if (words.length === 0) {
+                                searchResults.innerHTML = '<div style="padding: 12px 16px; color: #94a3b8;">No words found. Create a new one below.</div>';
+                            } else {
+                                words.forEach(function(word) {
+                                    const div = document.createElement('div');
+                                    div.className = 'search-result-item';
+                                    div.innerHTML = '<span><span class="en">' + word.englishWord + '</span> — <span class="ru">' + word.translation + '</span></span><span class="badge">' + word.difficultyLevel + '</span>';
+                                    div.addEventListener('click', function() {
+                                        selectWord(word);
+                                    });
+                                    searchResults.appendChild(div);
+                                });
+                            }
+                            searchResults.classList.add('active');
+                        })
+                        .catch(err => console.error('Search error:', err));
+                }, 200);
+            });
+
+            // Close search results when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.search-container')) {
+                    searchResults.classList.remove('active');
+                }
+            });
+
+            // Toggle create new word form
+            toggleCreateBtn.addEventListener('click', function() {
+                const isHidden = createNewForm.classList.contains('is-hidden');
+                createNewForm.classList.toggle('is-hidden');
+                toggleCreateBtn.textContent = isHidden ? '− Hide form' : '✏️ Create a new word';
+            });
+        </script>
+    </th:block>
+</body>
+</html>

@@ -17,7 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableWebSecurity(debug = true)
+@EnableWebSecurity
 public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
@@ -59,12 +59,18 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/", "/cards/**").permitAll()
+                        .requestMatchers("/", "/login", "/oauth2/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/cards/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/cards", "/api/cards/search", "/api/cards/random").permitAll()
+                        .requestMatchers("/cards/search-global", "/api/cards/search-global").permitAll()
+                        .requestMatchers("/api/cards/my", "/api/cards/my/**").authenticated()
+                        .requestMatchers("/api/cards/{id}/add-to-collection").authenticated()
+                        .requestMatchers("/api/cards/{id}/remove-from-collection").authenticated()
+                        .requestMatchers("/api/cards/{id}/study-status").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/cards/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/cards/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/cards/**").authenticated()
+                        .requestMatchers("/cards/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
