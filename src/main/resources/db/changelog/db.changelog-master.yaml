@@ -17,3 +17,5 @@ databaseChangeLog:
       file: db/changelog/changeset/008-create-user-word-progress.yaml
   - include:
       file: db/changelog/changeset/009-migrate-existing-user-cards.yaml
+  - include:
+      file: db/changelog/changeset/010-study-mixed-mode.yaml

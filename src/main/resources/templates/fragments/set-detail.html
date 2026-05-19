@@ -29,15 +29,19 @@
                         </p>
                     </div>
                     <div class="set-detail-actions">
-                        <form th:if="${!isSubscribed}" th:action="@{/sets/{id}/subscribe(id=${set.id})}" method="POST" style="display:inline;">
+                        <!-- Owner: show Add Word button -->
+                        <a th:if="${isOwner}" th:href="@{/cards/new(setId=${set.id})}" class="btn btn-primary">➕ Add Word</a>
+
+                        <!-- Non-owner: show Subscribe/Unsubscribe + Fork -->
+                        <form th:unless="${isOwner}" th:if="${!isSubscribed}" th:action="@{/sets/{id}/subscribe(id=${set.id})}" method="POST" style="display:inline;">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                             <button type="submit" class="btn btn-success">➕ Subscribe</button>
                         </form>
-                        <form th:if="${isSubscribed}" th:action="@{/sets/{id}/unsubscribe(id=${set.id})}" method="POST" style="display:inline;">
+                        <form th:unless="${isOwner}" th:if="${isSubscribed}" th:action="@{/sets/{id}/unsubscribe(id=${set.id})}" method="POST" style="display:inline;">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                             <button type="submit" class="btn btn-secondary">➖ Unsubscribe</button>
                         </form>
-                        <form th:action="@{/sets/{id}/fork(id=${set.id})}" method="POST" style="display:inline;">
+                        <form th:unless="${isOwner}" th:action="@{/sets/{id}/fork(id=${set.id})}" method="POST" style="display:inline;">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                             <button type="submit" class="btn">🍴 Fork</button>
                         </form>
@@ -64,7 +68,7 @@
                 </div>
 
                 <div class="mt-4">
-                    <a href="/sets" class="btn btn-secondary">← Back to Sets</a>
+                    <a th:href="@{/sets}" class="btn btn-secondary">← Back to Sets</a>
                 </div>
             </div>
         </div>

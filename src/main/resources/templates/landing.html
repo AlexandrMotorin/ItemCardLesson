@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout">
+<head>
+    <title layout:fragment="title">EnglishCards — Learn English Words</title>
+    <th:block layout:fragment="head">
+    </th:block>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <div th:replace="fragments/header :: header"></div>
+
+        <div class="landing-hero">
+            <div class="container">
+                <span class="landing-hero-icon">📚</span>
+                <h1>EnglishCards</h1>
+                <p>Учи английские слова эффективно — с наборами карточек,
+                   разными типами упражнений и отслеживанием прогресса</p>
+                <div class="hero-actions">
+                    <a href="/register" class="btn btn-landing-primary">Зарегистрироваться</a>
+                    <a href="/login" class="btn btn-landing-secondary">Войти</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="landing-features">
+                <div class="feature-card">
+                    <span class="feature-icon">📂</span>
+                    <h3>Наборы слов</h3>
+                    <p>Организуй слова в тематические наборы — свои или готовые от других пользователей</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">✍️</span>
+                    <h3>Два типа упражнений</h3>
+                    <p>Ввод текста и множественный выбор — каждое слово получает случайный тип задания</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🔀</span>
+                    <h3>Случайный порядок</h3>
+                    <p>Слова и направления перевода перемешиваются — EN→RU и RU→EN в одной сессии</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">📊</span>
+                    <h3>Статистика прогресса</h3>
+                    <p>Отслеживай свои результаты, находи слабые места и улучшай запоминание</p>
+                </div>
+            </div>
+        </div>
+    </th:block>
+</body>
+</html>

@@ -11,82 +11,95 @@
 
         <main class="container main-content">
             <div class="page-header">
-                <h1>📚 Start New Study Session</h1>
-                <p class="text-muted">Select word sets and exercise type</p>
+                <h1>📚 Начать изучение</h1>
+                <p class="text-muted">Выберите наборы слов для сессии</p>
             </div>
 
             <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
 
-            <form th:action="@{/study/start}" method="POST" class="study-form">
+            <form id="studyForm" th:action="@{/study/start}" method="POST">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
                 <!-- Subscribed Sets -->
-                <div th:if="${not #lists.isEmpty(subscribedSets)}" class="card mb-2">
-                    <div class="card-header">
-                        <h2>Your Subscribed Sets</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="checkbox-group">
-                            <div th:each="set : ${subscribedSets}" class="checkbox-item">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" th:name="setIds" th:value="${set.id}" class="checkbox-input">
-                                    <span class="checkbox-custom"></span>
-                                    <span class="checkbox-text" th:text="${set.name}">Set Name</span>
-                                    <span class="badge" th:text="${#lists.size(set.wordCards)} + ' words'">0 words</span>
-                                </label>
+                <div th:if="${not #lists.isEmpty(subscribedSets)}" class="study-sets-section">
+                    <h2>📌 Подписанные наборы</h2>
+                    <div class="sets-grid">
+                        <div th:each="set : ${subscribedSets}"
+                             class="set-card set-card-selectable"
+                             th:attr="data-set-id=${set.id}"
+                             role="checkbox" aria-checked="false" tabindex="0">
+                            <input type="checkbox" name="setIds" th:value="${set.id}" class="set-card-checkbox">
+                            <div class="set-card-header">
+                                <h3 th:text="${set.name}">Set Name</h3>
+                                <span class="set-word-count" th:text="${#lists.size(set.wordCards)} + ' слов'">0 слов</span>
                             </div>
+                            <p class="set-description"
+                               th:if="${set.description != null and !set.description.isEmpty()}"
+                               th:text="${set.description}">Description</p>
+                            <div class="set-card-check-indicator">✓</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Available Sets -->
-                <div class="card mb-2">
-                    <div class="card-header">
-                        <h2>Available Sets</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="checkbox-group">
-                            <div th:each="set : ${availableSets}" class="checkbox-item">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" th:name="setIds" th:value="${set.id}" class="checkbox-input">
-                                    <span class="checkbox-custom"></span>
-                                    <span class="checkbox-text" th:text="${set.name}">Set Name</span>
-                                    <span class="badge" th:text="${#lists.size(set.wordCards)} + ' words'">0 words</span>
-                                </label>
+                <div th:if="${not #lists.isEmpty(availableSets)}" class="study-sets-section">
+                    <h2>🌟 Доступные наборы</h2>
+                    <div class="sets-grid">
+                        <div th:each="set : ${availableSets}"
+                             class="set-card set-card-selectable"
+                             th:attr="data-set-id=${set.id}"
+                             role="checkbox" aria-checked="false" tabindex="0">
+                            <input type="checkbox" name="setIds" th:value="${set.id}" class="set-card-checkbox">
+                            <div class="set-card-header">
+                                <h3 th:text="${set.name}">Set Name</h3>
+                                <span class="set-word-count" th:text="${#lists.size(set.wordCards)} + ' слов'">0 слов</span>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Exercise Type -->
-                <div class="card mb-2">
-                    <div class="card-header">
-                        <h2>Exercise Type</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="radio-group">
-                            <div th:each="type : ${exerciseTypes}" class="radio-item">
-                                <label class="radio-label">
-                                    <input type="radio" th:name="exerciseType" th:value="${type.name()}" class="radio-input" th:checked="${type.name() == 'TEXT_INPUT'}">
-                                    <span class="radio-custom"></span>
-                                    <span class="radio-text">
-                                        <th:block th:switch="${type.name()}">
-                                            <th:block th:case="'TEXT_INPUT'">✏️ Text Input — Type the translation</th:block>
-                                            <th:block th:case="'MULTIPLE_CHOICE'">🎯 Multiple Choice — Pick the correct answer</th:block>
-                                        </th:block>
-                                    </span>
-                                </label>
-                            </div>
+                            <p class="set-description"
+                               th:if="${set.description != null and !set.description.isEmpty()}"
+                               th:text="${set.description}">Description</p>
+                            <div class="set-card-check-indicator">✓</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="form-actions">
-                    <a href="/cards" class="btn btn-ghost">Cancel</a>
-                    <button type="submit" class="btn btn-primary">▶ Start Studying</button>
+                    <a href="/sets" class="btn btn-ghost">Отмена</a>
+                    <button id="startBtn" type="submit" class="btn" disabled>▶ Начать изучение</button>
                 </div>
             </form>
         </main>
+
+        <script>
+            (function() {
+                const cards = document.querySelectorAll('.set-card-selectable');
+                const startBtn = document.getElementById('startBtn');
+
+                function updateStartButton() {
+                    const anyChecked = document.querySelectorAll('.set-card-checkbox:checked').length > 0;
+                    startBtn.disabled = !anyChecked;
+                    startBtn.className = anyChecked ? 'btn btn-primary' : 'btn';
+                }
+
+                cards.forEach(function(card) {
+                    card.addEventListener('click', function() {
+                        const checkbox = card.querySelector('.set-card-checkbox');
+                        checkbox.checked = !checkbox.checked;
+                        card.classList.toggle('set-card-selected', checkbox.checked);
+                        card.setAttribute('aria-checked', String(checkbox.checked));
+                        updateStartButton();
+                    });
+
+                    card.addEventListener('keydown', function(e) {
+                        if (e.key === ' ' || e.key === 'Enter') {
+                            e.preventDefault();
+                            card.click();
+                        }
+                    });
+                });
+
+                updateStartButton();
+            })();
+        </script>
     </div>
 </body>
 </html>

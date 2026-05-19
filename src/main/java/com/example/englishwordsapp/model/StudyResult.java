@@ -50,6 +50,12 @@ public class StudyResult {
     @Column(name = "answered_at", nullable = false)
     private LocalDateTime answeredAt;
 
+    @Column(name = "user_answer", length = 500)
+    private String userAnswer;
+
+    @Column(name = "direction", length = 20)
+    private String direction;
+
     @PrePersist
     protected void onCreate() {
         if (answeredAt == null) {

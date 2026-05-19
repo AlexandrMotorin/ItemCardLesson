@@ -63,9 +63,13 @@ public class WordSetController {
                 .orElse(null);
         if (wordSet == null) return "redirect:/sets";
 
+        Long userId = userDetails.getId();
+        boolean isOwner = wordSet.getOwner() != null && wordSet.getOwner().getId().equals(userId);
+
         model.addAttribute("set", wordSet);
         model.addAttribute("words", wordSet.getWordCards());
-        model.addAttribute("isSubscribed", wordSetService.isSubscribed(userDetails.getId(), id));
+        model.addAttribute("isOwner", isOwner);
+        model.addAttribute("isSubscribed", wordSetService.isSubscribed(userId, id));
         return "fragments/set-detail";
     }
 

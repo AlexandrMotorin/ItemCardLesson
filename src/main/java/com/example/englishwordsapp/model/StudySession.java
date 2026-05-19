@@ -19,7 +19,8 @@ public class StudySession {
 
     public enum ExerciseType {
         TEXT_INPUT,
-        MULTIPLE_CHOICE
+        MULTIPLE_CHOICE,
+        MIXED
     }
 
     @Id
@@ -52,6 +53,12 @@ public class StudySession {
 
     @Column(name = "word_ids_order", columnDefinition = "TEXT")
     private String wordIdsOrder;
+
+    @Column(name = "exercise_types_order", columnDefinition = "TEXT")
+    private String exerciseTypesOrder;
+
+    @Column(name = "directions_order", columnDefinition = "TEXT")
+    private String directionsOrder;
 
     @PrePersist
     protected void onCreate() {

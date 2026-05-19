@@ -59,7 +59,8 @@ public class WordCardController {
 
     @GetMapping("/new")
     public String showAddCardForm(Model model,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) Long setId) {
         if (userDetails == null) {
             return "redirect:/login";
         }
@@ -68,6 +69,7 @@ public class WordCardController {
         }
         List<WordSet> userSets = wordSetService.getUserSets(userDetails.getId());
         model.addAttribute("userSets", userSets);
+        model.addAttribute("preSelectedSetId", setId);
         return "fragments/card-form";
     }
 
@@ -77,6 +79,7 @@ public class WordCardController {
             Model model,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(required = false) Long setId,
+            @RequestParam(required = false) List<Long> setIds,
             RedirectAttributes redirectAttributes) {
         if (userDetails == null) {
             return "redirect:/login";
@@ -87,22 +90,38 @@ public class WordCardController {
             model.addAttribute("errors", bindingResult);
             List<WordSet> userSets = wordSetService.getUserSets(userId);
             model.addAttribute("userSets", userSets);
+            model.addAttribute("preSelectedSetId", setIds != null && !setIds.isEmpty() ? setIds.get(0) : null);
             return "fragments/card-form";
         }
 
         if (wordCard.getId() != null) {
-            if (setId != null) {
+            if (setIds != null && !setIds.isEmpty()) {
+                for (Long sid : setIds) {
+                    wordSetService.addWordToSet(sid, wordCard.getId(), userId);
+                }
+            } else if (setId != null) {
                 wordSetService.addWordToSet(setId, wordCard.getId(), userId);
             } else {
                 wordCardService.addCardToUserCollection(userId, wordCard.getId());
             }
-            redirectAttributes.addFlashAttribute("successMessage", "Word added to your collection!");
-            return "redirect:/cards";
+        redirectAttributes.addFlashAttribute("successMessage", "Word added to your collection!");
+            if (setIds != null && setIds.size() == 1) {
+                return "redirect:/sets/" + setIds.get(0);
+            }
+            return "redirect:/sets";
         }
 
         WordCard savedCard = wordCardService.createCardAndAddToUserCollection(userId, wordCard);
+        if (setIds != null && !setIds.isEmpty()) {
+            for (Long sid : setIds) {
+                wordSetService.addWordToSet(sid, savedCard.getId(), userId);
+            }
+        }
         redirectAttributes.addFlashAttribute("successMessage", "New word created and added to your collection!");
-        return "redirect:/cards";
+        if (setIds != null && setIds.size() == 1) {
+            return "redirect:/sets/" + setIds.get(0);
+        }
+        return "redirect:/sets";
     }
 
     @GetMapping("/{id}")
@@ -122,7 +141,7 @@ public class WordCardController {
                     );
                     return "fragments/card-detail";
                 })
-                .orElse("redirect:/cards");
+                .orElse("redirect:/sets");
     }
 
     @PostMapping("/{id}/add")
@@ -134,7 +153,7 @@ public class WordCardController {
         }
         wordCardService.addCardToUserCollection(userDetails.getId(), id);
         redirectAttributes.addFlashAttribute("successMessage", "Word added to your collection!");
-        return "redirect:/cards";
+        return "redirect:/sets";
     }
 
     @PostMapping("/{id}/remove")
@@ -146,7 +165,7 @@ public class WordCardController {
         }
         wordCardService.removeCardFromUserCollection(userDetails.getId(), id);
         redirectAttributes.addFlashAttribute("successMessage", "Word removed from your collection!");
-        return "redirect:/cards";
+        return "redirect:/sets";
     }
 
     @PostMapping("/{id}/status")
@@ -197,9 +216,11 @@ public class WordCardController {
         return wordCardService.getCardById(id)
                 .map(card -> {
                     model.addAttribute("wordCard", card);
+                    List<WordSet> userSets = wordSetService.getUserSets(userDetails.getId());
+                    model.addAttribute("userSets", userSets);
                     return "fragments/card-form";
                 })
-                .orElse("redirect:/cards");
+                .orElse("redirect:/sets");
     }
 
     @PostMapping("/{id}")
@@ -214,13 +235,13 @@ public class WordCardController {
         }
         wordCardService.updateCard(id, wordCard);
         redirectAttributes.addFlashAttribute("successMessage", "Card updated successfully!");
-        return "redirect:/cards";
+        return "redirect:/sets";
     }
 
     @PostMapping("/{id}/delete")
     public String deleteCard(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         wordCardService.deleteCard(id);
         redirectAttributes.addFlashAttribute("successMessage", "Card deleted successfully!");
-        return "redirect:/cards";
+        return "redirect:/sets";
     }
 }

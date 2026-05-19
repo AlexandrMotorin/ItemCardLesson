@@ -78,7 +78,7 @@ public class SecurityConfig {
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
-                        .defaultSuccessUrl("/cards", true)
+                        .defaultSuccessUrl("/sets", true)
                         .failureUrl("/login?error=true")
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService)
@@ -87,13 +87,13 @@ public class SecurityConfig {
                 .formLogin(form ->
                         form.loginPage("/login")
                                 .loginProcessingUrl("/login")
-                                .defaultSuccessUrl("/cards", true)
+                                .defaultSuccessUrl("/sets", true)
                                 .failureUrl("/login?error=true")
                                 .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login?logout=true")
+                        .logoutSuccessUrl("/")
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll()

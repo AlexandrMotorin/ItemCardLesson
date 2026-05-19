@@ -4,28 +4,16 @@
 <header th:fragment="header">
     <nav class="navbar">
         <div class="container">
-            <a href="/cards" class="navbar-brand">
+            <a href="/" class="navbar-brand">
                 <span class="navbar-brand-icon">📚</span>
                 EnglishCards
             </a>
             <div class="navbar-links">
                 <!-- Links for authenticated users -->
                 <th:block sec:authorize="isAuthenticated()">
-                    <a href="/cards">
-                        <span>📋</span>
-                        <span class="nav-label">My Cards</span>
-                    </a>
                     <a href="/sets">
                         <span>📚</span>
-                        <span class="nav-label">Sets</span>
-                    </a>
-                    <a href="/cards/new">
-                        <span>➕</span>
-                        <span class="nav-label">Add Word</span>
-                    </a>
-                    <a href="/cards/random">
-                        <span>🎲</span>
-                        <span class="nav-label">Random</span>
+                        <span class="nav-label">My Sets</span>
                     </a>
                     <a href="/study">
                         <span>📖</span>

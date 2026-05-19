@@ -140,7 +140,7 @@
                 </div>
 
                 <!-- Hidden form for submitting selected existing word -->
-                <form id="addExistingForm" action="/cards" method="POST" class="hidden-form">
+                <form id="addExistingForm" th:action="@{/cards}" method="POST" class="hidden-form">
                     <input type="hidden" name="id" id="selectedCardId">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 </form>
@@ -151,9 +151,19 @@
                         ✏️ Didn't find it? Create a new word
                     </button>
 
-                    <form id="createNewForm" action="/cards" method="POST" class="is-hidden">
+                    <form id="createNewForm" th:action="@{/cards}" method="POST" class="is-hidden">
                         <input type="hidden" name="id" value="">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                        <div class="form-group">
+                            <label for="setSelector" class="form-label">Sets</label>
+                            <select id="setSelector" class="form-input">
+                                <option value="" disabled selected>Select a set...</option>
+                                <option th:each="s : ${userSets}" th:value="${s.id}" th:text="${s.name}"></option>
+                            </select>
+                            <div id="selectedSetsContainer" class="set-badges-container"></div>
+                            <div id="hiddenSetInputs"></div>
+                        </div>
 
                         <div class="form-group">
                             <label for="englishWord">English Word *</label>
@@ -196,18 +206,18 @@
 
                         <div class="form-actions">
                             <button type="submit" class="btn">➕ Create & Add to Collection</button>
-                            <a href="/cards" class="btn btn-secondary">Cancel</a>
+                            <a th:href="@{/cards}" class="btn btn-secondary">Cancel</a>
                         </div>
                     </form>
                 </div>
 
                 <div class="mt-4">
-                    <a href="/cards" class="btn btn-secondary">← Back to My Cards</a>
+                    <a th:href="@{/cards}" class="btn btn-secondary">← Back to My Cards</a>
                 </div>
             </div>
         </div>
 
-        <script>
+        <script th:inline="javascript">
             const searchInput = document.getElementById('wordSearch');
             const searchResults = document.getElementById('searchResults');
             const selectedWordInfo = document.getElementById('selectedWordInfo');
@@ -236,7 +246,12 @@
                 searchInput.classList.add('is-hidden');
                 searchResults.classList.remove('active');
                 searchResults.innerHTML = '';
-                // Automatically submit and add to collection
+                // Clone setIds inputs into addExistingForm before submitting
+                const setInputs = document.querySelectorAll('#hiddenSetInputs input[name="setIds"]');
+                setInputs.forEach(function(input) {
+                    const clone = input.cloneNode(true);
+                    addExistingForm.appendChild(clone);
+                });
                 addExistingForm.submit();
             }
 
@@ -260,7 +275,21 @@
                                 words.forEach(function(word) {
                                     const div = document.createElement('div');
                                     div.className = 'search-result-item';
-                                    div.innerHTML = '<span><span class="en">' + word.englishWord + '</span> — <span class="ru">' + word.translation + '</span></span><span class="badge">' + word.difficultyLevel + '</span>';
+                                    var span = document.createElement('span');
+                                    var enSpan = document.createElement('span');
+                                    enSpan.className = 'en';
+                                    enSpan.textContent = word.englishWord;
+                                    var trSpan = document.createElement('span');
+                                    trSpan.className = 'ru';
+                                    trSpan.textContent = word.translation;
+                                    span.appendChild(enSpan);
+                                    span.appendChild(document.createTextNode(' — '));
+                                    span.appendChild(trSpan);
+                                    var badgeSpan = document.createElement('span');
+                                    badgeSpan.className = 'badge';
+                                    badgeSpan.textContent = word.difficultyLevel;
+                                    div.appendChild(span);
+                                    div.appendChild(badgeSpan);
                                     div.addEventListener('click', function() {
                                         selectWord(word);
                                     });
@@ -286,6 +315,60 @@
                 createNewForm.classList.toggle('is-hidden');
                 toggleCreateBtn.textContent = isHidden ? '− Hide form' : '✏️ Create a new word';
             });
+
+            // --- Multi-set badge selection ---
+            const setSelector = document.getElementById('setSelector');
+            const selectedSetsContainer = document.getElementById('selectedSetsContainer');
+            const hiddenSetInputs = document.getElementById('hiddenSetInputs');
+
+            function addSetBadge(setId, setName) {
+                if (document.querySelector('.set-badge[data-set-id="' + setId + '"]')) return;
+
+                const badge = document.createElement('span');
+                badge.className = 'set-badge';
+                badge.setAttribute('data-set-id', setId);
+                badge.innerHTML = setName + '<span class="set-badge-remove" onclick="removeSet(\'' + setId + '\')">×</span>';
+                selectedSetsContainer.appendChild(badge);
+
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'setIds';
+                hidden.value = setId;
+                hidden.setAttribute('data-set-id', setId);
+                hiddenSetInputs.appendChild(hidden);
+            }
+
+            function removeSet(setId) {
+                const badge = document.querySelector('.set-badge[data-set-id="' + setId + '"]');
+                if (badge) badge.remove();
+                const hidden = document.querySelector('#hiddenSetInputs input[data-set-id="' + setId + '"]');
+                if (hidden) hidden.remove();
+            }
+
+            setSelector.addEventListener('change', function() {
+                const option = this.options[this.selectedIndex];
+                if (option.value) {
+                    addSetBadge(option.value, option.textContent);
+                    this.selectedIndex = 0;
+                }
+            });
+
+            // Pre-select set if provided
+            (function() {
+                var preSelectedSetId = /*[[${preSelectedSetId}]]*/ null;
+                if (preSelectedSetId) {
+                    var options = setSelector.options;
+                    for (var i = 0; i < options.length; i++) {
+                        if (options[i].value == preSelectedSetId) {
+                            addSetBadge(options[i].value, options[i].textContent);
+                            break;
+                        }
+                    }
+                    // Also show the create form if pre-selected
+                    createNewForm.classList.remove('is-hidden');
+                    toggleCreateBtn.textContent = '− Hide form';
+                }
+            })();
         </script>
     </th:block>
 </body>

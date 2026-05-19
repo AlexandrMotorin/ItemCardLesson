@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 010-study-mixed-mode
+      author: english-words-app
+      comment: Добавление колонок для MIXED-режима — per-question exerciseType и direction
+      changes:
+        # Новые колонки в study_sessions
+        - addColumn:
+            tableName: study_sessions
+            columns:
+              - column:
+                  name: exercise_types_order
+                  type: TEXT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: directions_order
+                  type: TEXT
+                  constraints:
+                    nullable: true
+
+        # Новые колонки в study_results
+        - addColumn:
+            tableName: study_results
+            columns:
+              - column:
+                  name: user_answer
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: direction
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: true

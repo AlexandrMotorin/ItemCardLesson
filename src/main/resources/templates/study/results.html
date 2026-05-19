@@ -3,7 +3,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
-    <title>Study Session Results</title>
+    <title>Результаты сессии</title>
 </head>
 <body>
     <div layout:fragment="content">
@@ -11,70 +11,113 @@
 
         <main class="container main-content">
             <div class="page-header">
-                <h1>📊 Session Results</h1>
-                <p class="text-muted">Your study session is complete!</p>
+                <h1>📊 Результаты</h1>
+                <p class="text-muted">Сессия изучения завершена!</p>
             </div>
 
             <!-- Summary Card -->
             <div class="card mb-2">
                 <div class="card-header">
-                    <h2>Summary</h2>
+                    <h2>Итого</h2>
                 </div>
                 <div class="card-body">
                     <div class="results-summary">
                         <div class="result-stat">
                             <span class="result-stat-icon">📝</span>
-                            <span class="result-stat-label">Total Words</span>
-                            <span class="result-stat-value" th:text="${session.wordCount}">0</span>
+                            <span class="result-stat-value" th:text="${studySession.wordCount}">0</span>
+                            <span class="result-stat-label">Всего слов</span>
                         </div>
                         <div class="result-stat result-stat-correct">
                             <span class="result-stat-icon">✅</span>
-                            <span class="result-stat-label">Correct</span>
                             <span class="result-stat-value" th:text="${correctCount}">0</span>
+                            <span class="result-stat-label">Правильно</span>
                         </div>
                         <div class="result-stat result-stat-incorrect">
                             <span class="result-stat-icon">❌</span>
-                            <span class="result-stat-label">Incorrect</span>
                             <span class="result-stat-value" th:text="${incorrectCount}">0</span>
+                            <span class="result-stat-label">Неправильно</span>
                         </div>
                         <div class="result-stat"
                              th:classappend="${percentage >= 80} ? 'result-stat-great' : (${percentage >= 50} ? 'result-stat-good' : 'result-stat-poor')">
                             <span class="result-stat-icon">🎯</span>
-                            <span class="result-stat-label">Score</span>
-                            <span class="result-stat-value" th:text="${percentage} + '%'">0%</span>
+                            <span class="result-stat-value" th:text="${percentageFormatted} + '%'">0%</span>
+                            <span class="result-stat-label">Результат</span>
                         </div>
                     </div>
 
                     <!-- Encouragement message -->
                     <div class="encouragement" th:if="${percentage >= 80}">
-                        <p>🌟 Excellent work! Keep it up!</p>
+                        <p>🌟 Отличная работа! Так держать!</p>
                     </div>
                     <div class="encouragement" th:if="${percentage >= 50 and percentage < 80}">
-                        <p>👍 Good effort! A bit more practice and you'll master these words.</p>
+                        <p>👍 Хороший результат! Ещё немного практики — и вы освоите эти слова.</p>
                     </div>
                     <div class="encouragement" th:if="${percentage < 50}">
-                        <p>💪 Keep practicing! Review the words and try again.</p>
+                        <p>💪 Продолжайте практиковаться! Повторите слова и попробуйте ещё раз.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Detailed Results -->
-            <div class="card">
+            <!-- Mistakes Table -->
+            <div class="card mb-2">
                 <div class="card-header">
-                    <h2>Detailed Results</h2>
+                    <h2>❌ Ошибки</h2>
                 </div>
                 <div class="card-body">
+                    <div th:if="${#lists.isEmpty(incorrectResults)}" class="empty-state">
+                        <div class="empty-icon">🎉</div>
+                        <p>Поздравляем! Все ответы правильные!</p>
+                    </div>
+                    <div th:unless="${#lists.isEmpty(incorrectResults)}" class="results-table-container">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Вопрос</th>
+                                    <th>Правильный ответ</th>
+                                    <th>Ваш ответ</th>
+                                    <th>Направление</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <tbody>
+                                <tr th:each="result, iterStat : ${incorrectResults}" class="result-row-incorrect">
+                                    <td th:text="${iterStat.count}">1</td>
+                                    <!-- Question: what was shown to user -->
+                                    <td th:text="${result.direction == 'RU_TO_EN'} ? ${result.wordCard.translation} : ${result.wordCard.englishWord}">word</td>
+                                    <!-- Correct answer -->
+                                    <td th:text="${result.direction == 'RU_TO_EN'} ? ${result.wordCard.englishWord} : ${result.wordCard.translation}">answer</td>
+                                    <!-- User answer -->
+                                    <td th:text="${result.userAnswer != null} ? ${result.userAnswer} : '—'">—</td>
+                                    <td>
+                                        <span class="badge" th:if="${result.direction == 'EN_TO_RU'}">EN → RU</span>
+                                        <span class="badge" th:if="${result.direction == 'RU_TO_EN'}">RU → EN</span>
+                                        <span class="badge" th:if="${result.direction == null}">—</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Results (collapsible) -->
+            <details class="card mb-2">
+                <summary class="card-header details-summary">
+                    <h2>📋 Все результаты</h2>
+                </summary>
+                <div class="card-body">
                     <div th:if="${#lists.isEmpty(results)}" class="empty-state">
-                        <p>No results recorded.</p>
+                        <p>Нет записей.</p>
                     </div>
                     <div th:unless="${#lists.isEmpty(results)}" class="results-table-container">
                         <table class="results-table">
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>English Word</th>
-                                    <th>Translation</th>
-                                    <th>Result</th>
+                                    <th>Слово</th>
+                                    <th>Перевод</th>
+                                    <th>Результат</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -84,20 +127,21 @@
                                     <td th:text="${result.wordCard.englishWord}">word</td>
                                     <td th:text="${result.wordCard.translation}">translation</td>
                                     <td>
-                                        <span th:if="${result.correct}" class="badge badge-success">✅ Correct</span>
-                                        <span th:unless="${result.correct}" class="badge badge-error">❌ Incorrect</span>
+                                        <span th:if="${result.correct}" class="badge badge-success">✅</span>
+                                        <span th:unless="${result.correct}" class="badge badge-error">❌</span>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
-            </div>
+            </details>
 
             <!-- Actions -->
             <div class="form-actions mt-2">
-                <a href="/study" class="btn btn-primary">📚 Study Again</a>
-                <a href="/cards" class="btn btn-ghost">🏠 Back to Cards</a>
+                <a href="/study" class="btn btn-primary">📚 Пройти заново</a>
+                <a href="/study" class="btn btn-secondary">🔄 Выбрать другие наборы</a>
+                <a href="/sets" class="btn btn-ghost">🏠 На главную</a>
             </div>
         </main>
     </div>
