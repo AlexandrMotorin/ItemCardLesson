@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Reusable confirm modal fragment.
+
+  Usage:
+    1. Include in your page:
+         <div th:replace="~{fragments/confirm-modal :: confirmModal}"></div>
+
+    2. On delete button add:
+         data-delete-form="formId"
+         data-delete-message="Custom message (optional)"
+
+    3. The corresponding <form> must have the matching id.
+-->
+<th:block th:fragment="confirmModal">
+
+    <div id="confirmModal" class="confirm-modal-overlay" aria-modal="true" role="dialog" aria-labelledby="confirmModalTitle" hidden>
+        <div class="confirm-modal-dialog">
+            <h3 id="confirmModalTitle" class="confirm-modal-title">Подтвердите удаление</h3>
+            <p id="confirmModalMessage" class="confirm-modal-message">Вы уверены, что хотите удалить этот элемент? Это действие нельзя отменить.</p>
+            <div class="confirm-modal-actions">
+                <button id="confirmModalCancel" type="button" class="btn btn-ghost">Отмена</button>
+                <button id="confirmModalConfirm" type="button" class="btn btn-danger">Удалить</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .confirm-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+            animation: modalFadeIn 0.15s ease;
+        }
+
+        .confirm-modal-overlay[hidden] {
+            display: none;
+        }
+
+        .confirm-modal-dialog {
+            background: var(--color-surface, #fff);
+            border-radius: var(--radius-md, 10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+            padding: 28px 32px;
+            max-width: 420px;
+            width: 100%;
+        }
+
+        .confirm-modal-title {
+            font-size: 1.125rem;
+            font-weight: var(--fw-semibold, 600);
+            margin: 0 0 10px;
+            color: var(--color-text-primary, #1e293b);
+        }
+
+        .confirm-modal-message {
+            font-size: var(--fs-body, 0.9375rem);
+            color: var(--color-text-secondary, #64748b);
+            margin: 0 0 24px;
+            line-height: 1.55;
+        }
+
+        .confirm-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+    </style>
+
+    <script>
+        (function () {
+            const overlay  = document.getElementById('confirmModal');
+            const msgEl    = document.getElementById('confirmModalMessage');
+            const cancelBtn= document.getElementById('confirmModalCancel');
+            const confirmBtn=document.getElementById('confirmModalConfirm');
+
+            let pendingForm = null;
+
+            function openModal(formId, message) {
+                pendingForm = document.getElementById(formId);
+                if (message) msgEl.textContent = message;
+                overlay.hidden = false;
+                confirmBtn.focus();
+            }
+
+            function closeModal() {
+                overlay.hidden = true;
+                pendingForm = null;
+            }
+
+            // Bind all delete-trigger buttons
+            document.addEventListener('click', function (e) {
+                const trigger = e.target.closest('[data-delete-form]');
+                if (!trigger) return;
+                e.preventDefault();
+                e.stopPropagation();
+                openModal(trigger.dataset.deleteForm, trigger.dataset.deleteMessage || null);
+            });
+
+            confirmBtn.addEventListener('click', function () {
+                if (pendingForm) pendingForm.submit();
+                closeModal();
+            });
+
+            cancelBtn.addEventListener('click', closeModal);
+
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) closeModal();
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && !overlay.hidden) closeModal();
+            });
+        })();
+    </script>
+
+</th:block>
+</body>
+</html>

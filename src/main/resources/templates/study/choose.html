@@ -31,12 +31,14 @@
                             <input type="checkbox" name="setIds" th:value="${set.id}" class="set-card-checkbox">
                             <div class="set-card-header">
                                 <h3 th:text="${set.name}">Set Name</h3>
-                                <span class="set-word-count" th:text="${#lists.size(set.wordCards)} + ' слов'">0 слов</span>
+                                <div class="set-card-header-right">
+                                    <span class="set-word-count" th:text="${#lists.size(set.wordCards)} + ' слов'">0 слов</span>
+                                    <div class="set-card-check-indicator">✓</div>
+                                </div>
                             </div>
                             <p class="set-description"
                                th:if="${set.description != null and !set.description.isEmpty()}"
                                th:text="${set.description}">Description</p>
-                            <div class="set-card-check-indicator">✓</div>
                         </div>
                     </div>
                 </div>
@@ -52,12 +54,14 @@
                             <input type="checkbox" name="setIds" th:value="${set.id}" class="set-card-checkbox">
                             <div class="set-card-header">
                                 <h3 th:text="${set.name}">Set Name</h3>
-                                <span class="set-word-count" th:text="${#lists.size(set.wordCards)} + ' слов'">0 слов</span>
+                                <div class="set-card-header-right">
+                                    <span class="set-word-count" th:text="${#lists.size(set.wordCards)} + ' слов'">0 слов</span>
+                                    <div class="set-card-check-indicator">✓</div>
+                                </div>
                             </div>
                             <p class="set-description"
                                th:if="${set.description != null and !set.description.isEmpty()}"
                                th:text="${set.description}">Description</p>
-                            <div class="set-card-check-indicator">✓</div>
                         </div>
                     </div>
                 </div>

@@ -11,6 +11,9 @@
     <th:block layout:fragment="content">
         <div th:replace="fragments/header :: header"></div>
 
+        <!-- Confirm delete modal (reusable) -->
+        <div th:replace="~{fragments/confirm-modal :: confirmModal}"></div>
+
         <div class="container">
             <div class="page-content">
                 <div class="page-header">
@@ -26,7 +29,9 @@
                 <div class="sets-section" th:if="${mySets != null and !mySets.isEmpty()}">
                     <h2>📂 My Sets</h2>
                     <div class="sets-grid">
-                        <div class="set-card" th:each="set : ${mySets}">
+                        <div class="set-card set-card-clickable"
+                             th:each="set : ${mySets}"
+                             th:attr="data-href=@{/sets/{id}(id=${set.id})}">
                             <div class="set-card-header">
                                 <h3 th:text="${set.name}">Set Name</h3>
                                 <span class="set-word-count" th:text="${#lists.size(set.wordCards)} + ' words'">0 words</span>
@@ -34,12 +39,18 @@
                             <p class="set-description" th:if="${set.description != null and !set.description.isEmpty()}"
                                th:text="${set.description}">Description</p>
                             <div class="set-card-actions">
-                                <a th:href="@{/sets/{id}(id=${set.id})}" class="btn btn-sm">👁 View</a>
-                                <form th:action="@{/sets/{id}/delete(id=${set.id})}" method="POST" style="display:inline;">
+                                <!-- hidden delete form -->
+                                <form th:id="'delete-form-' + ${set.id}"
+                                      th:action="@{/sets/{id}/delete(id=${set.id})}" method="POST"
+                                      style="display:none;">
                                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                                    <button type="submit" class="btn btn-sm btn-danger"
-                                            onclick="return confirm('Delete this set?')">🗑 Delete</button>
                                 </form>
+                                <button type="button"
+                                        class="btn-icon btn-icon-danger"
+                                        th:attr="data-delete-form='delete-form-' + ${set.id}"
+                                        data-delete-message="Удалить этот набор? Это действие нельзя отменить."
+                                        title="Удалить набор"
+                                        onclick="event.stopPropagation()">🗑</button>
                             </div>
                         </div>
                     </div>
@@ -49,7 +60,9 @@
                 <div class="sets-section" th:if="${availableSets != null}">
                     <h2>🌟 Available Sets</h2>
                     <div class="sets-grid">
-                        <div class="set-card" th:each="set : ${availableSets}">
+                        <div class="set-card set-card-clickable"
+                             th:each="set : ${availableSets}"
+                             th:attr="data-href=@{/sets/{id}(id=${set.id})}">
                             <div class="set-card-header">
                                 <h3 th:text="${set.name}">Set Name</h3>
                                 <span class="set-word-count" th:text="${#lists.size(set.wordCards)} + ' words'">0 words</span>
@@ -57,8 +70,8 @@
                             <p class="set-description" th:if="${set.description != null and !set.description.isEmpty()}"
                                th:text="${set.description}">Description</p>
                             <div class="set-card-actions">
-                                <a th:href="@{/sets/{id}(id=${set.id})}" class="btn btn-sm">👁 View</a>
-                                <form th:action="@{/sets/{id}/subscribe(id=${set.id})}" method="POST" style="display:inline;">
+                                <form th:action="@{/sets/{id}/subscribe(id=${set.id})}" method="POST"
+                                      style="display:inline;" onclick="event.stopPropagation()">
                                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                                     <button type="submit" class="btn btn-sm btn-success">➕ Subscribe</button>
                                 </form>
@@ -71,15 +84,16 @@
                 <div class="sets-section" th:if="${subscribedSets != null and !subscribedSets.isEmpty()}">
                     <h2>📌 Subscribed Sets</h2>
                     <div class="sets-grid">
-                        <div class="set-card" th:each="set : ${subscribedSets}">
+                        <div class="set-card set-card-clickable"
+                             th:each="set : ${subscribedSets}"
+                             th:attr="data-href=@{/sets/{id}(id=${set.id})}">
                             <div class="set-card-header">
                                 <h3 th:text="${set.name}">Set Name</h3>
                                 <span class="set-word-count" th:text="${#lists.size(set.wordCards)} + ' words'">0 words</span>
                             </div>
                             <p class="set-description" th:if="${set.description != null and !set.description.isEmpty()}"
                                th:text="${set.description}">Description</p>
-                            <div class="set-card-actions">
-                                <a th:href="@{/sets/{id}(id=${set.id})}" class="btn btn-sm">👁 View</a>
+                            <div class="set-card-actions" onclick="event.stopPropagation()">
                                 <form th:action="@{/sets/{id}/unsubscribe(id=${set.id})}" method="POST" style="display:inline;">
                                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                                     <button type="submit" class="btn btn-sm btn-secondary">➖ Unsubscribe</button>
@@ -103,6 +117,15 @@
                 </div>
             </div>
         </div>
+
+        <script>
+            // Make cards with data-href navigable by click
+            document.querySelectorAll('.set-card-clickable[data-href]').forEach(function(card) {
+                card.addEventListener('click', function() {
+                    window.location.href = card.dataset.href;
+                });
+            });
+        </script>
     </th:block>
 </body>
 </html>
